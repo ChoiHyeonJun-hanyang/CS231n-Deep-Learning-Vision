@@ -52,6 +52,15 @@
 
 ---
 
-## Trouble Shooting & Learnings
+## Lecture and Assignment reviews
 *(과제나 개념 공부를 하면서 얻었던 깨달음)*
 
+### Lecture 1: Introduction
+- **배운 점**
+  - 1. 이 강의를 통해 배우고자 하는 것은 Computer Vision이라는 분야에서 사용되는 Deep Learning 기술
+       (예로부터 Vision의 진화는 Intelligence의 진화를 이끌었다)
+  - 2. 전반적인 Computer Vision의 발전과 AI의 발전 과정 및 간단한 Overview
+
+### Lecture 2: Image Classification with Linear Classifiers
+- **배운 점**
+  - 1.
