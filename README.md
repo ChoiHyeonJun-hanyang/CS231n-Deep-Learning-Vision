@@ -34,26 +34,7 @@
 
 ## Daily Log & TIL
 
-### 1월 9일 이전
-- 1강 ~ 9강 수강 완료
-- Assignment 1, 2 진행
-
-### 2026년 1월 10일
-- **Assignment2: Image Captioning with Vanilla RNNs** 완료
-- **학습 내용***
-  - 강의를 들었을 때는 확실하지 않던 Vanilla RNNs에 대한 개념 이해
-  - Embedding에 대한 이해와 PyTorch 활용에 관한 이해
-
-### 2026년 1월 11일
-- **Lecture 10: Video Understanding** 수강 완료
-- **학습 내용**:
-  - Video Classification에서 3D CNN을 사용할 때 연산량 문제와 해결책(T, H, W Trade-off)
-  - Training(Short clips)과 Testing(Average over clips)의 차이점 이해
-
----
-
-## Lecture and Assignment reviews
-*(과제나 개념 공부를 하면서 얻었던 깨달음)*
+### 1월음
 
 ### Lecture 1: Introduction
 #### 배운 점
@@ -150,20 +131,25 @@
 
 ### Lecture 4: Neural Networks and Backpropagation
 
-> **Main Keywords:** 
+> **Main Keywords:** Neural Networks, Activation Function, Backpropagation, Chain Rule
 
 #### 배운 점
 
-1. 
-   -
-
+1. **Activation Function에 대해**
+   - Activation function을 사용하는 이유는 linear * linear = linear이고 이는 class를 분류하는 것에 있어서 한계가 발생하기에 non-linearity를 만들기 위해서 사용
+   - 주로 ReLU (max(0, x))를 사용
+   - Sigmoid의 경우 0과 그 근처를 제외한 나머지 부분에선 gradient가 0에 근접하는 문제가 발생하므로 middle layer에서 사용하지 않음 (너무 좁은 범위로 값을 옮기려고 하기에)
+2. **BackPropagation에 대해**
+   - Input layer와 가까울수록, gradient를 도출해내는 것은 매우 힘듦
+   - 따라서 Chain Rule을 사용하여 Upstream gradient * Local gradient 의 방식으로 gradient를 구함
+   - add gate, mul gate, copy gate, max gate로 gradient flow를 표현 가능하며 각각 gradient 유지, 상대 input 곱해주기, gradient 더해주기, 승자독식의 형태를 가짐
 ---
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Neural Network의 크기
+**Q.** ppt에선 Neural Network의 크기를 regularier로 사용하지 말고, strong regularization을 사용하라고 하던데 이 이유에 대한 의문.
+> **A.** Neural Network의 크기를 키워서 더욱 복잡한 분류도 가능하게 하는 것은 중요, Overfitting을 방지하기 위해서 model의 성능을 저하시키기보단 Regularization을 강하게 해 Underfitting을 유도하는 것이 바람직.
 
 ### Lecture 5: Image Classification with CNNs
 
