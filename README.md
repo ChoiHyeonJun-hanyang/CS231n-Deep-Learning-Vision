@@ -20,8 +20,8 @@
 - **핵심 내용**: Backpropagation, CNN Architectures, Training Neural Networks
 
 ### 3주차 (진행 중)
-- [x] 강의 10강 (Video Understanding) 수강
-- [ ] 강의 11강 ~ 13강 수강
+- [x] 강의 10강 ~ 11강 수강
+- [ ] 강의 12강 ~ 13강 수강
 - [x] Assignment 2 종료
 - [ ] Assignment 3 시작
 
