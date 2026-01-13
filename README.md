@@ -64,6 +64,8 @@
    - Computer Vision이라는 분야에서 사용되는 Deep Learning 기술 (예로부터 Vision의 진화는 Intelligence의 진화를 이끌었다)
 2. **전반적인 Computer Vision의 발전과 AI의 발전 과정 및 간단한 Overview**
 
+---
+
 ### Lecture 2: Image Classification with Linear Classifiers
 
 > **Main Keywords:** Image Classification, K-Nearest Neighbors, Hyperparameters, Linear Classifiers, Softmax, SVM
@@ -85,8 +87,6 @@
 7. **SVM Initialization**
    - SVM에서 $W$가 작아서 $s$가 0에 가깝다면, loss는 $C - 1$
 
----
-
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. K-NN의 공간 문제
@@ -102,6 +102,8 @@
 > **A.**
 > - **SVM:** 특정 조건만 만족한다면 더 이상 그 부분의 성능 향상을 요구하지 않음.
 > - **Softmax:** 아무리 classify가 성공했더라도 계속해서 loss를 발생시키기에, 더욱 확실하게 분류하도록(좋은 성능을 내게) 유도함.
+
+---
 
 ### Lecture 3: Regularization and Optimization
 
@@ -139,7 +141,6 @@
    - 기존의 방식은 First-Order Optimization
    - Second-Order Optimization의 경우 현재의 gradient에 맞는 이차 곡선을 확인 후, 이 곡선의 최솟값이 있는 곳에 빠르게 도달
    - 하지만 이 방식은 O(N^3)이 필요한 만큼 오래 걸림 -> 그럼에도 속도가 빠름 
----
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -150,6 +151,8 @@
 ##### 2. Second-Order Optimization 실제 사용 여부
 **Q.** 교수님의 말씀에 의하면, 만약 파라미터의 개수가 적은 모델을 학습시키려고 한다면 Second-Order Optimization을 활용할 수 있다고 하셨는데 연산의 복잡성에도 불구 이를 사용할 이유에 대한 의문.
 > **A.** 훨씬 적은 횟수로 정답을 찾고, Learning Rate 튜닝 스트레스가 없음, 하지만 파라미터가 많으면 계산이 불가능할 정도로 느리기에 계산이 가능한 범위에서는 사용하는 것을 추천.
+
+---
 
 ### Lecture 4: Neural Networks and Backpropagation
 
@@ -165,13 +168,14 @@
    - Input layer와 가까울수록, gradient를 도출해내는 것은 매우 힘듦
    - 따라서 Chain Rule을 사용하여 Upstream gradient * Local gradient 의 방식으로 gradient를 구함
    - add gate, mul gate, copy gate, max gate로 gradient flow를 표현 가능하며 각각 gradient 유지, 상대 input 곱해주기, gradient 더해주기, 승자독식의 형태를 가짐
----
-
+   - 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. Neural Network의 크기
 **Q.** ppt에선 Neural Network의 크기를 regularier로 사용하지 말고, strong regularization을 사용하라고 하던데 이 이유에 대한 의문.
 > **A.** Neural Network의 크기를 키워서 더욱 복잡한 분류도 가능하게 하는 것은 중요, Overfitting을 방지하기 위해서 model의 성능을 저하시키기보단 Regularization을 강하게 해 Underfitting을 유도하는 것이 바람직.
+
+---
 
 ### Lecture 5: Image Classification with CNNs
 
@@ -211,7 +215,6 @@
  8. **Translation Equivariance와 CNN**
     - Conv와 Translate는 순서가 바뀌어도 같은 결과를 도출
     - 이는 Features of images가 위치에 관계없다는 것을 의미
----
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -231,6 +234,8 @@
 > - 기존의 방식인 MLP의 경우 형태를 분류할 수는 있지만, 형태가 image에서 등장하는 위치가 달라진다면 새로운 패턴으로 인식
 > - 반면 CNN의 경우엔 image에 대해서 weight sharing filter를 통해서 각각 다른 부분을 관찰함, 여기서 이 Equivariance에 의해 다른 위치에서 같은 패턴이 나타난다고 하여도 CNN은 weight sharing filter를 통해 이해 가능
 
+---
+
 ### Lecture 6: CNN Architectures
 
 > **Main Keywords:** 
@@ -240,13 +245,13 @@
 1. 
    -
 
----
-
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. 
 **Q.** 
 > **A.** 
+
+---
 
 ### Lecture 7: Recurrent Neural Networks
 
@@ -257,13 +262,13 @@
 1. 
    -
 
----
-
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. 
 **Q.** 
 > **A.** 
+
+---
 
 ### Lecture 8: Attention and Transformers
 
@@ -274,15 +279,13 @@
 1. 
    -
 
----
-
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. 
 **Q.** 
 > **A.** 
 
-  
+---
 
 
 
