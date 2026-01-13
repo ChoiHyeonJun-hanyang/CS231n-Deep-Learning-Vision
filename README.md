@@ -1,4 +1,4 @@
-#  CS231n: Deep Learning for Computer Vision
+<img width="1768" height="928" alt="image" src="https://github.com/user-attachments/assets/3dc05979-c67f-484b-8299-b1656269bb1a" />#  CS231n: Deep Learning for Computer Vision
 
 스탠포드 대학의 CS231n 강의를 수강하며 진행한 과제와 학습 내용을 정리하는 레포지토리입니다.
 
@@ -23,7 +23,7 @@
 - [x] 강의 10강 ~ 11강 수강
 - [ ] 강의 12강 ~ 13강 수강
 - [x] Assignment 2 종료
-- [ ] Assignment 3 시작
+- [x] Assignment 3 시작
 
 ### 4주차 (예정)
 - [ ] 강의 14강 ~ 18강 수강
@@ -34,7 +34,29 @@
 
 ## Daily Log & TIL
 
-### 1월음
+### 2025년 12월 24일 ~ 2026년 1월 8일
+1. Lecture 1~9 수강
+2. Assignment1 완료 및 Assignment2 - Batch Normalization ~ Convolution Neural Networks 완료
+
+### 2026년 1월 9일 
+1. Assignment2 - PyTorch on CIFAR-10 종료
+
+### 2026년 1월 10일
+1. Assignment2 - Image Captioning with Vanilla RNNs
+2. GitHub 레포지토리 생성 및 과제 옮기기
+
+### 2026년 1월 11일
+1. 지금까지의 수강한 Lecture 1 ~ 9 Review
+2. Lecture 10: Video Understanding 수강
+
+### 2026년 1월 12일
+1. Lecture 11: Large Scale Distributed Training 수강
+
+### 2026년 1월 13일
+1. Lecture 12: Self-supervised Learning 수강
+2. Assignment3 - Image Captioning with Transformers 시작
+
+### 2026년
 
 ### Lecture 1: Introduction
 #### 배운 점
@@ -131,7 +153,7 @@
 
 ### Lecture 4: Neural Networks and Backpropagation
 
-> **Main Keywords:** Neural Networks, Activation Function, Backpropagation, Chain Rule
+> **Main Keywords:** Neural Networks, Activation Function, Backpropagation, Chain Rule, Computation Graph, Fully-Connected Layer
 
 #### 배운 점
 
@@ -153,20 +175,61 @@
 
 ### Lecture 5: Image Classification with CNNs
 
-> **Main Keywords:** 
+> **Main Keywords:** Image features, Convolution Layer, Padding, Stride, Pooling Layer, Translation Equivariance
 
 #### 배운 점
 
-1. 
-   -
-
+1. **Image features에 대해**
+   - Image를 raw data로 넣는 것이 기존의 방법이라면, 다양한 방법을 통해 Image의 features를 추출하여 이를 model training에 이용
+   - Ex) Color Histogram, Histogram of Oriented Gradients(HoG), CNN을 통한 features 추출 
+2. **CNN의 개념 등장 과정**
+   - 기존의 Neural Networks는 N x C x H x W로 이루어진 여러개의 Image data를 N x (C * H * W)의 형태로 변형하여 계산 -> 이는 Spatial structure of images를 붕괴
+   - 이를 극복하기 위해서 filter라는 개념을 도입한 Convolution Neural Networks라는 개념이 등장
+3. **기존의 Fully Connected Layer에 대해**
+   - 32 x 32 x 3 image -> stretch to 3072 x 1로 이미지를 변경한 후 Wx + b의 연산을 진행
+   - 이를 추상적으로 이해한다면, W가 (D, C)의 형태일때 우리는 Image를 C개의 template와 비교 후 activation 과정을 걸쳐서 scores를 도출함
+   - 여기서 비교란 내적으로 진행, 내적의 경우 template와 image가 비슷하다면 높은 값이 나오고 다르다면 0이 나옴
+4. **Convolution Layer에 대해**
+   - C_in x H x W 형태의 image가 있다면 이를 F개의 filter를 사용, 각각의 filter size는 C_in x HH x WW
+   - 이 결과로 F개의 H_out x W_out 크기의 activation map을 얻을 수 있음, activation map의 각각의 element는 Filter * 특정 위치의 pixels + bias로 계산
+   - H_out = (H - HH + 2P) / S + 1, W_out = (W - WW + 2P) / S + 1 (Padding, Stride 도입 이후)
+   - 이러한 Conv 연산 이후 Activation function을 사용 -> non-linearity를 도입하기 위해
+   - 상대적으로 out layer에 가까운 Conv의 filter일수록 더욱 디테일한 형태를 인식할 수 있음
+5. **Padding에 대해**
+   - 위의 방식대로 진행한다면 Conv 연산 후, 나온 activation map의 크기가 기존의 image보다 작아지는 문제가 발생
+   - 이 문제를 해결하기 위해 기존의 Image에서 가장자리를 확대한 후, 해당 pixel의 값을 0으로 채우는 Padding이 도입
+6. **Stride에 대해**
+   - Filter를 3 x 3의 크기로 사용한다면 activation map의 element가 확인할 수 있는 부분은 1 + 2 * L x 1 + 2 * L
+   - 우리가 한 element가 전체 사진을 전부 인식하게끔 만드는데 너무 많은 Layer가 필요함
+   - 이를 극복하기 위해 Stride라는 개념을 도입
+   - 이는 Dowmsample의 예시로 이를 도입 시, Output = (W - K + 2P) / S + 1이 되고 output이 S로 나눠지기에 층이 깊어질수록 한 칸이 담고 있는 정보가 지수적으로 증가
+7. **Pooling Layer에 대해**
+   - Stride와 마찬가지로 Downsample을 하는 하나의 방법임
+   - Hyperparmeters: Kernel Size (=Filter Size), Stride, Pooling function
+   - Max Pool 방식의 경우 ReLU와 유사한 점이 존재하고, non-linearity를 도입하기에 꼭 ReLU를 사용해야 하는것은 아님
+   - 하지만 Avg Pool 방식은 linear + linear이기에 명시적인 Activation function이 필요요
+ 8. **Translation Equivariance와 CNN**
+    - Conv와 Translate는 순서가 바뀌어도 같은 결과를 도출
+    - 이는 Features of images가 위치에 관계없다는 것을 의미
 ---
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. filter 및 가중치의 학습 방식
+**Q.** filter나 weight가 backpropagation에 의해서 학습되고 이는 우리가 따로 주제를 선정하지 않더라도 알아서 학습을 한다는 점에 의문
+> **A.** 처음에 weight initialization에서 random하게 설정, 각각의 가중치 부분마다 filter마다 약간의 차이가 존재 이 차이가 filter간의 균형을 깨고, 이 점이 filter로 하여금 각각 다른 부분을 학습시킴
+
+##### 2. Pooling Layer에서의 Padding
+**Q.** Convolution Layer의 경우 크기를 맞춰주기 위해서 Padding을 해주는데 Pooling Layer에서도 Padding을 하는지에 대한 의문
+> **A.**
+> - Convolution Layer의 경우 목적이 Feature을 추출하는 것이고 Padding의 역할은 크기 유지 + 가장자리 정보에 대한 인식 저하를 막는 것
+> - Pooling Layer는 정보를 버리는 것이 목적이기에 가장자리에 0을 추가하여 크기를 보존하려고 할 필요가 없음 (Downsample의 목적에서 벗어남)
+
+##### 3. Translation Equivariance와 CNN의 관계 
+**Q.** 교수님의 설명을 해석하건대 Translation Equivariance는 CNN에게 굉장히 중요한 개념이라던데 그 이유에 대한 의문 
+> **A.**
+> - 기존의 방식인 MLP의 경우 형태를 분류할 수는 있지만, 형태가 image에서 등장하는 위치가 달라진다면 새로운 패턴으로 인식
+> - 반면 CNN의 경우엔 image에 대해서 weight sharing filter를 통해서 각각 다른 부분을 관찰함, 여기서 이 Equivariance에 의해 다른 위치에서 같은 패턴이 나타난다고 하여도 CNN은 weight sharing filter를 통해 이해 가능
 
 ### Lecture 6: CNN Architectures
 
