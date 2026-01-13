@@ -53,8 +53,7 @@
 1. Lecture 11: Large Scale Distributed Training 수강
 
 ### 2026년 1월 13일
-1. Lecture 12: Self-supervised Learning 수강
-2. Assignment3 - Image Captioning with Transformers 시작
+1. Assignment3 - Image Captioning with Transformers 시작
 
 ### 2026년
 
@@ -79,13 +78,13 @@
 3. **Hyperparameters 설정 방식**
    - 값을 설정할 때 여러 방식이 존재 (Validation Set을 사용, Cross-Validation 방식을 사용 등)
 4. **Softmax Loss의 역할**
-   - 우리가 Linear Classifiers에서 $Wx + b$ 로 얻은 scores를 확률로 바꿔주는 장치
+   - 우리가 Linear Classifiers에서 Wx + b 로 얻은 scores를 확률로 바꿔주는 장치
 5. **Softmax Initialization (Sanity Check)**
-   - Softmax의 Initialization 상황에서 모든 scores가 같다면, loss는 $-\log(1/C) = \log(C)$ 이어야 함 (추후 Sanity Check에서 사용)
+   - Softmax의 Initialization 상황에서 모든 scores가 같다면, loss는 -log(1/C) = log(C) 이어야 함 (추후 Sanity Check에서 사용)
 6. **SVM Loss의 원리**
-   - Classes의 scores에 대해서 정답 class의 scores과 얼마나 차이가 나는지를 확인 ($\max(0, s_j - s_{y_i} + 1)$ 을 사용)
+   - Classes의 scores에 대해서 정답 class의 scores과 얼마나 차이가 나는지를 확인 (max(0, s_j - s_{y_i} + 1) 을 사용)
 7. **SVM Initialization**
-   - SVM에서 $W$가 작아서 $s$가 0에 가깝다면, loss는 $C - 1$
+   - SVM에서 W가 작아서 s가 0에 가깝다면, loss는 C - 1
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -213,8 +212,8 @@
    - Max Pool 방식의 경우 ReLU와 유사한 점이 존재하고, non-linearity를 도입하기에 꼭 ReLU를 사용해야 하는것은 아님
    - 하지만 Avg Pool 방식은 linear + linear이기에 명시적인 Activation function이 필요요
  8. **Translation Equivariance와 CNN**
-    - Conv와 Translate는 순서가 바뀌어도 같은 결과를 도출
-    - 이는 Features of images가 위치에 관계없다는 것을 의미
+   - Conv와 Translate는 순서가 바뀌어도 같은 결과를 도출
+   - 이는 Features of images가 위치에 관계없다는 것을 의미
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -238,18 +237,71 @@
 
 ### Lecture 6: CNN Architectures
 
-> **Main Keywords:** 
+> **Main Keywords:** Normalization, Dropout, Activation Functions, CNN Architectures, Weight Initialization, Data Preprocessing, Data augmentation, Transfer Learning, Hyperparameter Selection
 
 #### 배운 점
 
-1. 
-   -
+1. **Normalization에 대해**
+   - 데이터를 우리가 원하는 예쁜 모양으로 강제로 맞춰주는 과정
+   - 모델이 학습하면서 레이어를 거칠 때마다 특정 데이터가 너무 크거나 작은 문제 발생 -> Normalization을 통해서 학습 속도가 증가함
+   - Layer Norm은 같은 image 내의 데이터를 정규화, Batch Norm은 같은 데이터 차원 내에서의 데이터를 정규화
+   - 이외에도 Group Norm, Instance Norm 존재
+2. **Dropout에 대해**
+   - forward pass에서 random하게 몇몇 뉴런을 특정 확률에 따라 0으로 둠
+   - 여기서 Probability of dropping은 Hyperparameter임
+   - 이는 학습 과정에서 model로 하여금 데이터를 학습할 때, 일부 특징을 무시하고 학습하도록 강제하기에 Regularization의 기능을 함
+   - test time에선 모든 특징을 전부 반영해서 classify해야하기에 모든 뉴런을 활성화시킨 상태에서 최종 output에 p(확률)을 곱해줘야함
+3. **Activation Functions에 대해**
+   **Sigmoid**
+      - 값을 0과 1 사이의 확률값으로 변경해주는 Sigmoid의 경우, 모든 정의역에서 미분가능하지만, 문제가 존재
+      - 많은 층에서 Sigmoid를 연속적으로 사용하는 경우, 계속해서 gradient 값이 작아짐 -> 이는 Backpropagation 과정에서 문제가 발생
+      - 특히 절댓값이 큰 경우, gradient가 0에 가까워지는 문제가 커짐
+   **ReLU**
+      - Non-linearity 추가 가능
+      - 하지만 양수와 음수가 많이 섞인 데이터의 경우, ReLU는 0보다 작은 값을 0으로 처리하기에 해당 가중치 부분이 죽는 경우가 발생
+      - 이를 해결하기 위해 GELU, Leaky ReLU 등 다양한 응용형태가 존재
+4. **CNN Architectures에 대해** 
+   **VGGNet**
+      - 3x3 Conv (stride 1, pad 1), 2x2 MAX POOL (stride 2)를 사용
+      - 3x3 Conv를 3번 연달아서 사용하는 것은 7x7 Conv와 같은 효과를 냄 (effective receptive field의 측면에서), 하지만 # of parameters 27C << 49C 로 3x3 Conv가 훨씬 효율적
+      - 또한 Activation Funtion은 주로 Convolution 연산 이후 실행하는데 activation function의 실행 횟수가 늘어나기에 더욱 복잡한 형태를 분류 가능
+   **ResNet**
+      - 기존의 Conv, ReLU와 Pool을 순서대로 쌓는 방식의 model은 깊이가 깊어질수록 모델의 성능이 떨어지는 문제가 존재
+      - 이는 모델의 성능이 매우 좋아 과적합 (Overfitting) 의 상태가 된 것이 아니라, 모델의 학습이 제대로 이루어지지 않아서 발생한 문제
+      - 이 문제를 해결하기 위해 Identity mapping을 이용한 ResNet이 등장
+      - H(x) = F(x) + x의 형태와 2개의 3x3 Conv Layer가 있는 residual block로 구성
+      - 2x2 Max Pool (stride = 2) 을 이용, 이를 이용시 H와 W의 길이가 절반으로 줄고 전체 데이터의 크기는 1/4배 되기에 데이터 손실을 줄이기 위해서 Filter의 개수를 2배로 늘림림
+5. **Weight Initialization에 대해**
+   - Weight Initialization 과정에서 이를 랜덤하게 생성할 때 곱해지는 값에 따라 Layer가 깊어지면서 Weight의 mean과 std가 폭발적으로 증가하거나 감소할 수 있음
+   - 우리가 원하는 Initialization은 Layer의 깊이에 관계없이 항상 일정한 mean과 std를 가지는 것
+   - 이를 위해 Weight matrix (D_in x D_out) 의 크기 중 하나인 D_in을 활용한 sqrt(2/D_in) 을 곱해주는 Kaiming Initialization을 활용 
+6. **Data Preprocessing에 대해**
+   - 구해놓은 per-channel mean을 data에서 빼고 per-channel std로 나눠줌
+   - 다양한 Class의 다양한 사진을 모아둔 ImageNet의 평균과 표준편차를 이용하는 것도 괜찮음
+7. **Data augmentation에 대해**
+   - 원본 데이터를 일부 변경하는 것
+   - Horizontal Flips: 상하좌우 변환
+   - Random crops and scales: Training에선 랜덤한 위치에 랜덤한 크기의 box를 sample로 사용, Test에선 다양한 크기의 박스들을 우리가 고정한 위치에서 여러번 테스트한 후, 이를 평균내서 classify
+   - Color Jitter: 밝기 조절, Cutout: Image에서 일부를 특정 색으로 처리
+   - 이 방식들은 전부 모델들로 하여금 해당 형태의 본질적인 특성을 인식하게 유도, 이는 일종의 Regularization의 효과를 가짐
+8. **Transfer Learning에 대해**
+   - 기존에 학습된 CNN model의 마지막 FC Layer를 제외한 나머지를 그 모델이 class를 분류할 때 사용하는 feature를 얻는 것에 사용하는 것
+   - 우리는 우리가 분류할 데이터와 해당 모델이 학습한 데이터의 차이 정도와 데이터 개수를 확인 후, 이후 수정사항을 결정
+9. **Hyperparameter Selection에 대해**
+    - 처음 손실값을 확인, 이후 적은 양의 데이터를 Overfitting 시킴
+    - 적절한 Learning Rate를 찾을 때까지 학습을 반복
+    - 이 과정에서 사용되는 Learning Rate는 크게 Random Search와 Grid Search로 나눌 수 있음
+    - Random Search는 Grid Search에선 알기 힘든 Hyperparameter의 중요도를 확인할 수 있기에 더욱 효율적인 경우가 많음
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. 3x3 Conv & 7x7 Conv
+**Q.** 3x3 Conv 3개와 7x7 Conv를 비교할 때, 단순히 가중치 저장을 위한 메모리만을 고려하였는데, Layer가 추가로 생기면서 발생하는 시간적, 메모리적 측면에 대한 의문
+> **A.** 3x3 Conv가 곱셈 횟수가 적으니 시간적으로는 forward, backward 에서 전부 7x7 Conv보다 빠르지만, backpropagation을 위해 저장해야하는 중간값의 메모리는 증가함. 
+
+##### 2. ResNet의 장점
+**Q.** 교수님께선 ResNet이 다른 Networks에 비해 기존의 모델을 이용할 수 있어서 효율적이라고 하는데, 이 말에 대한 의문
+> **A.** 우리가 더 작은 모델을 가져왔다고 가정, 이 모델의 정확도를 증가시키기 위해 뒤에 추가적인 Layer를 도입했다고 한다면, 기존의 방식의 경우 Random하게 가중치를 초기화하기에 작은 모델의 성능을 그대로 구현하기 힘듦. 하지만 ResNet은 추가된 Layer의 가중치를 0으로 설정 후, 이전 block의 데이터를 이후 block의 데이터로 보내는 방식을 사용해서 더 작은 모델의 성능에서부터 모델 디자인을 시작할 수 있음.
 
 ---
 
