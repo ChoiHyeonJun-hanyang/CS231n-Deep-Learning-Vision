@@ -20,8 +20,8 @@
 - **핵심 내용**: Backpropagation, CNN Architectures, Training Neural Networks
 
 ### 3주차 (진행 중)
-- [x] 강의 10강 ~ 11강 수강
-- [ ] 강의 12강 ~ 13강 수강
+- [x] 강의 10강 ~ 12강 수강
+- [ ] 강의 13강 수강
 - [x] Assignment 2 종료
 - [x] Assignment 3 시작
 
@@ -54,6 +54,7 @@
 
 ### 2026년 1월 13일
 1. Assignment3 - Image Captioning with Transformers 시작
+2. Lecture 12: Self-Supervised Learning 수강
 
 ### 2026년
 
