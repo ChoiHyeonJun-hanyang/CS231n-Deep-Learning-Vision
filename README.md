@@ -379,7 +379,90 @@
 
 ---
 
+### Lecture 9: Object Detection, Image Segmentation, Visualizing and Understanding
 
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 10: Video Understanding
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 11: Large Scale Distributed Training
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 12: Self-supervised Learning
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 13: Generative Models 1
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
 
 
 
