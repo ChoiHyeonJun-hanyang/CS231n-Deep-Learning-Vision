@@ -364,18 +364,50 @@
 
 ### Lecture 8: Attention and Transformers
 
-> **Main Keywords:** 
+> **Main Keywords:** Attention, Self-Attention Layer, Transformer
 
 #### 배운 점
 
-1. 
-   -
+1. **Attention의 등장 배경**
+   - RNNs을 사용해서 특정 언어를 다른 언어로 변환하려고 한다면, 우리는 Encoder과 Decoder라는 2개의 RNNs를 정의해야 함
+   - Encoder에서 모든 input에 대한 정보를 다 담은 context vector를 만든 후, 이 vector를 Decoder의 input이나 hidden state에 사용하는 방식
+   - 하지만 이 방식의 문제점은 input이 길어진다면 고정된 C 벡터에 너무 많은 정보를 넣다보니 상대적으로 정보의 손실이 발생
+   - 이를 극복하기 위해 decoder state를 encoder에서 사용 -> decoder state * hidden state를 통해 alignment scores을 구하고 이를 softmax를 통해 attention weights를 구함 이를 각각의 hidden state와 곱하여 특정 decoder state에서의 context vector를 구함
+   - 이 과정에서 decoder state를 사용해서 모든 input이 아닌 특정 input에 어느정도를 집중한다는 아이디어가 Attention으로 발전
+2. **Attention Layer에 대해**
+   - Query와 Input vectors인 X로 만든 Key, Value를 이용하여 Key와 Query를 내적을 통해 Similarities를 얻고 이를 Softmax를 통해 Attention Weights로 만들고, Value와 곱해서 Output vector를 도출
+   - Self-Attention Layer는 Query 또한 Key, Value와 마찬가지로 X를 통해서 만듦
+   - Self-Attention Layer는 모든 Q, K, V가 같은 X로 만들어지기에 X의 순서가 달라진다고 하더라도, 단순히 Y의 순서가 달라질 뿐 값이 달라지지는 않음 -> Permutation equivariant
+   - 하지만 Self-Attention Layer은 Time이라는 정보가 없기에 Sequence의 순서를 모르고 이를 해결하기 위해 Positional encoding을 추가
+   - Masked Self-Attention Layer는 우리가 참고하면 안되는 정보에 대해서 -infinity로 설정해서 softmax를 0에 근접하게 만들고 이는 주로 Language model에서 이후의 단어들을 참고하면 안되는 경우에 사용 (예측)
+   - Multiheaded Self-Attention Layer는 H개의 전문가 그룹을 세워놓고, 각각의 전문가들이 알아낸 정보를 W_o를 통해 Concatenate하는 방식
+   - CNNs의 장점인 parallel한 연산 가능과 RNNs의 장점인 sequence의 길이에 상관 없다는 점을 합친 Self-Attention이 연산비용이 비싸고, 메모리 효율이 안 좋더라도 현재 거의 모든 부분에서 사용
+3. **Transformer에 대해**
+   - Transformer는 Transformer block이 연결되어 있는 형태
+   - Transformer block은 input data X에 대해 Self-Attention + residual connection -> Layer Normalziation -> MLP + residual connection -> Layer Normalization의 과정을 수행하는 block
+   - 이런 Transformer를 사용해서 LLM을 구현할 수 있는데 처음에 Embedding Matrix [V x D]를 사용해서 언어를 컴퓨터가 이해할 수 있는 값으로 바꾸고, 마지막에 Projection Matrix와 softmax를 이용해서 모델이 구한 값을 다시 단어들의 확률로 바꿔서 도출
+   - Pre-Norm Transformer: Layer Normalization is outside the residual connections -> identity function을 정확히 넘겨줄 수 없음, 따라서 기존의 순서를 Layer Normalization -> Self-Attention + residual connection -> Layer Normalization -> MLP + Self-Attention 의 순서로 변경
+   - RMSNorm: Layer Normalization보다 Root-Mean-Square Normalization이 상대적으로 학습을 더욱 안정적으로 만듦
+   - SwiGLU MLP: 기존의 MLP 대신에 Y = (𝜎 (𝑋𝑊1) ⊙ 𝑋𝑊2) 𝑊3 를 사용 (H = 8D/3을 사용)
+   - MoE: 기존의 방식인 1개의 MLP 대신 E개의 전문가 MLP를 만들어서 parameter를 늘리더라도 각각의 데이터에 대해 특정 전문가 집단만을 활성화시켜 더욱 정확도를 늘리는 방식
+   - ViT: image를 D개의 patches로 나눈 후, 이를 D차원의 input X로 transformer에 넣은 후, 마지막에 Pooling을 사용하여 이를 우리가 분류하려는 C개의 차원으로 바꿈
+   - ViT의 과정에서 masking을 사용하지 않고 (이미지는 모든 부분을 고려해야 하기 때문에), Positional Encoding을 사용 (이미지는 공간 정보가 중요하기에)
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Attention의 발전 과정
+**Q.** 지금까지 배운 모든 Neural Networks는 전부 Learnable parameters를 학습시킬 때, Backpropagation을 사용하는 데 어떻게 Transformer 또는 Attention과 같은 성능 좋은 모델을 설계할 수 있는 지에 대한 의문 
+> **A.** 기본적으로 혁신적인 구조가 등장하는 과정은 기존의 모델의 Bottleneck을 해결하는 과정에서 새로운 구조의 모델이 등장.
+> - ResNet의 경우, 기존의 CNNs Architecture가 가진 문제인 Layer가 깊어질수록 학습이 gradient vanishing 때문에 잘 안되는 점을 고치기 위해서 H(x) = F(x) + x 와 같은 방식을 도입하여 설계.
+> - LSTM의 경우, 기존의 RNNs Architecture에서 time의 값이 커질수록 초기의 값들이 너무 많이 희석돼서 전달이 잘 안되는 문제를 해결하기 위해서 다양한 gate를 도입하여 문제 해결.
+> - Attention의 경우, RNNs을 이용한 Translator에서 발생하는 Context vector 문제를 해결하기 위한 과정에서 Attention이라는 개념 등장. 
+
+##### 2. Transformer의 범용성
+**Q.** 상대적으로 간단해 보이는 Transformer의 작동 방식에도 불구, 어떻게 이렇게 많은 분야에서 사용될 수 있는지에 대한 의문
+> **A.**
+> - 기존 모델인 CNN과 RNN은 근처 픽셀끼리 뭉쳐야 효율적이다, 순서대로 봐야 효율적이다 라는 인간의 편견을 가짐, Transformer는 그러한 편견을 가지지 않고 설계되었기에 더욱 효율적.
+> - CNN, RNN은 상황에 상관없이 항상 같은 가중치가 연산에서 사용, 하지만 Transformer는 input data X에 따라 가중치가 변화하는 특성을 가지기에 데이터에 유연하게 대처 가능.
+> - CNN, RNN은 기존의 데이터가 이후의 구조까지 연결되려면 많은 Layer를 거쳐야 함. 하지만 Transformer는 Self-Attention 한번을 통해 멀리 떨어진 Pixel 끼리의 정보 교환이 가능. 
 
 ---
 
