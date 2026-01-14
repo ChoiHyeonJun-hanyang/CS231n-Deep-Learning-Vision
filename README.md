@@ -53,8 +53,10 @@
 1. Lecture 11: Large Scale Distributed Training 수강
 
 ### 2026년 1월 13일
+1. Lecture 12: Self-Supervised Learning 수강
+
+### 2026년 1월 14일
 1. Assignment3 - Image Captioning with Transformers 시작
-2. Lecture 12: Self-Supervised Learning 수강
 
 ### 2026년
 
@@ -308,18 +310,55 @@
 
 ### Lecture 7: Recurrent Neural Networks
 
-> **Main Keywords:** 
+> **Main Keywords:** Recurrent Neural Networks, Truncated Backpropagation, Image Captioning, Long Short Term Memory (LSTM)
 
 #### 배운 점
 
-1. 
-   -
+1. **Vanilla RNNs에 대해**
+   - h_t = f_W(h_{t-1}, x_t), y_t = f_Why(h_t)의 과정을 거쳐서 output y_t가 도출
+   - 여기서 사용되는 W, Why는 모든 time step에서 동일하게 사용
+   - 보통 activation function으로 tanh가 사용 (값의 폭발을 막기 위해서)
+   - One to Many에선 첫번째 input을 제외한 input을 이전 RNNs Block의 output으로 대체
+   - 학습은 Backpropagation을 사용해서 학습
+2. **Truncated Backpropagation에 대해**
+   - Time의 값이 커질수록 backpropagation이 힘들어지기에, Backpropagation을 some smaller number of steps에서만 진행
+   - Forward pass는 처음부터 끝까지 전부 이용
+   - 또한 Backpropagaion 과정에서 필요한 Loss도 특정 small number of steps에서만 추출, 이렇게 구한 gradient를 모든 block에 적용 가능 -> 가중치를 공유하기 때문
+3. **RNN tradoffs**
+   **RNN의 장점**
+      - input의 길이가 상관 없음
+      - 모든 가중치를 공유하기에 상대적으로 모델의 크기에 비해 메모리 소모량이 적음
+   **RNN의 단점**
+      - Recurrent computation이 매우 느림. 이는 Current hidden state를 구하기 위해선 Prev hidden state가 필요하기 때문
+      - hidden state의 값이 시간이 지나면서 다른 input과 많이 섞이기 때문에 이전의 hidden state의 값에 도달하기가 힘듦
+4. **Image Captioning with RNNs**
+   - 분류하고자 하는 Image를 CNN에 넣어서 feature을 추출해내고, 이 특징들을 RNN의 처음 hidden state에 넣음
+   - 그리고 <Start> 토큰을 input에 넣고 다음의 input은 이전 block의 output을 넣어서 One to Many 형식의 RNNs을 구현
+   - Visual Question Answering의 경우 CNN에서 feature을 뽑아내고 이 특징을 활용한 RNN을 통해 특정 질문을 학습한 후 그 질문에 대한 확률을 얻어냄
+5. **Multilayer RNNs에 대해** 
+   - RNNs에서 hidden layer를 서로 연결해서 구현
+   - 각각의 층마다 다른 가중치를 사용함
+   - 구하려는 hidden state의 time 값이 크고, depth가 깊을수록 hidden state를 구할 때 필요한 연산량이 많아짐
+6. **LSTM에 대해서**
+   - Vanilla RNN Gradient Flow는 기본적으로 gradient가 계속해서 같은 값이 곱해지는 형식이기에 그 값에 따라 매우 커지거나 작아짐
+   - 총 4개의 gate가 추가로 도입되었으며, 가장 중요한 아이디어는 forget gate로 이전의 정보를 ResNet의 아이디어처럼 Highway 형식으로 다음 cell state에 일정부분 그대로 넘겨줌
+   - 이 아이디어는 ResNet의 아이디어와 비슷하지만 약간은 다른 점이 존재함
+   - ResNet은 원본 input 그대로를 보내지만, LSTM의 경우 forget gate의 값을 곱해가며 보내기에 길이가 길어진다면 만약 f가 1과 매우 가까운 값이 아닌 경우에 gradient vanishing이 발생할 수 있음
+   - 그럼에도 불구하고, forget gate를 1로 만든다면 ResNet과 비슷하게 동작하기에 이를 극복 가능
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Vanilla RNNs에서 사용하는 activation function
+**Q.** PPT에선 Vanilla RNNs에서 hidden state를 구할 때, tanh를 사용하던데 이 활성화함수는 sigmoid와 마찬가지로 특정 범위에서 gradient vanishing이 발생해서 backpropagation이 발생하는 문제에 대한 의문
+> **A.** tanh는 모든 값들을 (-1, 1)의 범위에 가두는 성질을 가지고 있음. RNNs는 기존의 h_t를 W_hh에 계속해서 곱하면서 다음 구조로 넘기는 형식이기에 만약 값을 특정 범위로 제한하지 않는다면 값이 급증하거나 급락하는 문제가 발생. 이를 막기 위해서 gradient vanishing의 문제가 있더라도 tanh를 사용하였고, 이는 초기 RNNs의 성능을 제한하게 되면서 이후 LSTM의 등장 배경이 됨.
+
+##### 2. Truncated Backpropagation에서의 문제점
+**Q.** Truncated Backpropagation에서 마지막 부분 일부에서만 loss를 구한다고 하면 그 부분보다 앞에서 큰 오류가 발생했을 때, 이를 확인하고 고칠 수가 없는 것에 대한 문제점
+> **A.** loss를 확인한 부분보다 앞에서 오류가 발생했다면, 이 방법에선 이를 고칠 수 없음. 그럼에도 불구하고 이렇게 하지 않는다면 메모리 사용에서의 문제와 앞선 부분의 오류를 확인한다고 해도 backpropagation에서 gradient vanishing의 문제로 우리가 원하는 부분에 대한 학습이 잘 안될 가능성이 높음.
+
+##### 3. LSTM에서 Forget gate 문제
+**Q.** ResNet과 비슷한 아이디어를 사용한 LSTM에선 왜 굳이 gradient vanishing이 발생할 확률을 forget gate를 도입해서 남겨두었는지에 대한 의문
+> **A.** ResNet과 달리 LSTM은 tanh를 사용, h_t는 c_t의 값을 tanh를 사용해서 값을 -1부터 1 사이로 고정시키기에 c를 계속해서 더해도 괜찮아보이지만 tanh의 미분값은 1 - tanh^2이고 만약 tanh가 c가 계속 더해져서 큰 값을 가지거나 작은 값을 가지게 된다면 이 미분값이 거의 0에 수렴하게 되고, 이 점은 gradient vanishing이 아닌 학습 자체를 불가능하게 만들 수 있음. 
 
 ---
 
