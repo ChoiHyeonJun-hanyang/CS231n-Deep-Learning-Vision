@@ -54,9 +54,11 @@
 
 ### 2026년 1월 13일
 1. Lecture 12: Self-Supervised Learning 수강
+2. GitHub에 강의 5, 6강 정리
 
 ### 2026년 1월 14일
 1. Assignment3 - Image Captioning with Transformers 시작
+2. GitHub에 강의 7, 8강 정리
 
 ### 2026년
 
@@ -377,7 +379,7 @@
 2. **Attention Layer에 대해**
    - Query와 Input vectors인 X로 만든 Key, Value를 이용하여 Key와 Query를 내적을 통해 Similarities를 얻고 이를 Softmax를 통해 Attention Weights로 만들고, Value와 곱해서 Output vector를 도출
    - Self-Attention Layer는 Query 또한 Key, Value와 마찬가지로 X를 통해서 만듦
-   - Self-Attention Layer는 모든 Q, K, V가 같은 X로 만들어지기에 X의 순서가 달라진다고 하더라도, 단순히 Y의 순서가 달라질 뿐 값이 달라지지는 않음 -> Permutation equivariant
+   - Self-Attention Layer는 모든 Q, K, V가 같은 X를 통해 만들어지기에 X의 순서가 달라진다고 하더라도, 단순히 Y의 순서가 달라질 뿐 값이 달라지지는 않음 -> Permutation equivariant
    - 하지만 Self-Attention Layer은 Time이라는 정보가 없기에 Sequence의 순서를 모르고 이를 해결하기 위해 Positional encoding을 추가
    - Masked Self-Attention Layer는 우리가 참고하면 안되는 정보에 대해서 -infinity로 설정해서 softmax를 0에 근접하게 만들고 이는 주로 Language model에서 이후의 단어들을 참고하면 안되는 경우에 사용 (예측)
    - Multiheaded Self-Attention Layer는 H개의 전문가 그룹을 세워놓고, 각각의 전문가들이 알아낸 정보를 W_o를 통해 Concatenate하는 방식
