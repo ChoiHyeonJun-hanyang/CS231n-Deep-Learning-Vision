@@ -66,7 +66,6 @@
 ### 2026년 1월 16일
 1. Assignment3 - Image Captioning with Transformers 종료
 2. Lecture 13: Generative Models 1 수강
-3. GitHub에 강의 9강 정리
 
 ### 2026년
 
