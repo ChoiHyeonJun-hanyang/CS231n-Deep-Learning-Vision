@@ -60,8 +60,13 @@
 1. Assignment3 - Image Captioning with Transformers 시작
 2. GitHub에 강의 7, 8강 정리
 
-### 2026sus 1월 15일
+### 2026년 1월 15일
 1. Assignment3 - Image Captioning with Transformers 진행
+
+### 2026년 1월 16일
+1. Assignment3 - Image Captioning with Transformers 종료
+2. Lecture 13: Generative Models 1 수강
+3. GitHub에 강의 9강 정리
 
 ### 2026년
 
