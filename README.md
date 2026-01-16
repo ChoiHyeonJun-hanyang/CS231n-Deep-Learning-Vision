@@ -19,9 +19,8 @@
 - [x] Assignment 2 시작
 - **핵심 내용**: Backpropagation, CNN Architectures, Training Neural Networks
 
-### 3주차 (진행 중)
-- [x] 강의 10강 ~ 12강 수강
-- [ ] 강의 13강 수강
+### 3주차 (완료)
+- [x] 강의 10강 ~ 13강 수강
 - [x] Assignment 2 종료
 - [x] Assignment 3 시작
 
