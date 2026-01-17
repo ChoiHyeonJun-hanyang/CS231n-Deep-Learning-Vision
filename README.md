@@ -422,18 +422,43 @@
 
 ### Lecture 9: Object Detection, Image Segmentation, Visualizing and Understanding
 
-> **Main Keywords:** 
+> **Main Keywords:** Vision Transformers, Semantic Segmentation, Upsampling
 
 #### 배운 점
 
-1. 
-   -
+1. **ViT에 대해**
+   - Image를 patches로 나눈 후, 이를 D차원으로 만든 후, Positional Embedding을 추가
+   - 이 input을 Transformer에 넣은 후, 새로운 input을 추가하고 이 값을 통해서 나온 output을 C차원으로 만들어서 scores를 확인
+   - 또는 D차원의 값을 C차원으로 맞추기 위해, Average Pooling을 사용함
+3. **MoE에 대해**
+   - Transformer 내에 있는 MLP에 대해 기존의 가중치 값을 W1: [D x 4D], W2: [4D x D] -> W1: [E x D x 4D], W2: [E x 4D x D]로 변경
+   - Router가 E보다 작은 A개의 특정 분야에서의 전문가를 고른 후 이 그룹을 이용해서 결과 도출
+   - E의 값은 Hyperparameter
+4. **Semantic Segmentation에 대해**
+   - Semantic Segmentation의 목표는 각 픽셀별로 우리가 원하는 label를 기준으로 classify하는 것
+   **Sliding Window**
+      - 각 Pixel별로 근처의 맥락을 파악하기 위해서 pixel size보다 더 큰 patch를 CNN에 넣어서 classify
+      - pixel 개수 * CNN 만큼의 연산이 필요해서 매우 비효율적이고, pixel 별로 다른 CNN을 실행하기에 features을 공유하지 못해서 발생하는 비효율성의 문제도 존재
+   **Convolution**
+      - pixel size보다 더 큰 patch를 CNN에 넣는 것이 아닌, image 자체를 CNN에 넣는 방법
+      - 하지만 CNN architectures는 보통 layer가 깊어질 수록, pool이나 stride를 사용해서 data의 크기를 줄이는 방식을 사용
+      - 이 점은 모든 pixel에 class를 할당하는 Semantic Segmentation의 경우엔 기존 이미지의 크기를 output에서 유지해야 하기에 문제가 발생
+   **Fully Convolutional**
+      - (Without dowmsampling) input: [3 x H x W] -> Convolutions: [D x H x W] -> Scores: [C x H x W] -> Predictions: [H x W]의 형태로 진행
+      - 이 방식의 경우 전체 이미지를 downsampling 없이 CNN에 넣기에 CNN의 연산값이 너무 비싸짐
+      - (With downsampling and upsampling) input: [3 x H x W] -> High-res: [D1 x H/2 x W/2] -> Med-res: [D2 x H/4 x W/4] -> Low-res: [D3 x H/4 x W/4] -> Med-res -> High-res -> [C x H x W] -> Predictions: [H x W]
+      - Loss function의 경우, 모든 pixel에 대해 Softmax를 사용하고 이를 전부 더함 -> 이 loss를 이용해서 backpropagation을 할 수 있음
+5. **Upsampling에 대해**
+   - Nearest Neighbor: 크기를 키운 후, 해당 크기를 전부 같은 값으로 채움
+   - Bed of Nails: 크기를 키운 후, 왼쪽 위에 해당 값을 채우고 나머지 값을 0으로 채움
+   - Max Unpooling: Max Polling을 할 때, 어느 pixel에서 값이 max였는 지에 대한 position 정보를 저장한 후, 이를 Unpooling할 때 크기를 키우고 해당 position에 그 정보를 대입, 나머지 값은 0으로 채움
+   - Learnable Upsampling: 
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. MoE에서의 학습
+**Q.** 초기에 가중치를 랜덤하게 설정했을 때, 이 약간의 차이가 특정 그룹을 특정 분야에서의 전문가로 만든다는데, 이 가능성에 대한 의문 
+> **A.** 초기에 가중치가 랜덤하게 설정되는 과정에서 특정 그룹이 우리가 해결하고자 하는 문제를 다른 그룹에 비해 약간이라도 더 좋은 성능을 낸다면, 그 그룹으로 하여금 그 문제를 더욱 잘 풀게끔 만들면서 각각의 그룹이 특정 분야에 더 좋은 성능을 내는 방향으로 학습이 진행
 
 ---
 
