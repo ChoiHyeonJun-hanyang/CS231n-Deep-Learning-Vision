@@ -114,6 +114,12 @@
 > - **SVM:** 특정 조건만 만족한다면 더 이상 그 부분의 성능 향상을 요구하지 않음.
 > - **Softmax:** 아무리 classify가 성공했더라도 계속해서 loss를 발생시키기에, 더욱 확실하게 분류하도록(좋은 성능을 내게) 유도함.
 
+##### 4. SVM Loss 개념에 대한 문제
+**Q.** SVM을 Large Margin Classifier로 알고 있었는데 SVM Loss로만 배우는 것에 대한 의문
+> **A.**
+> - 기존의 Large Margin Classifier의 SVM은 수학적으로 깔끔하게 떨어지는 Global Optimum을 구하는 것이 목표, 이를 해결하기 위해 Lagrange Multiplier, Kernel Method를 사용 -> 이 방식의 경우 데이터가 적더라도 완벽한 해를 찾을 수 있음.
+> - 하지만 Deep Learning에서의 주 목적은 완벽한 해를 구하는 것이 아닌 데이터가 많은 경우에 더욱 빨리 근접한 해를 찾는 것이 목표, 이를 해결하기 위해 SGD와 같은 Optimizer를 사용 -> 더욱 빨리 계산하기 위해 제약조건 + 미분과 같은 복잡한 연산보다 Loss 함수를 간단한 부분으로 세워서 하는 것이 효율적. 이 Loss function이 max(0, s_j - s_yi + margin)의 형태    
+
 ---
 
 ### Lecture 3: Regularization and Optimization
@@ -436,6 +442,7 @@
    - E의 값은 Hyperparameter
 4. **Semantic Segmentation에 대해**
    - Semantic Segmentation의 목표는 각 픽셀별로 우리가 원하는 label를 기준으로 classify하는 것
+   - 즉 Semantic Segmentation은 어떤 객체가 어디에 있는지를 알고 싶은 것이 아닌, 특정 pixel이 어느 label에 속하는지 알고 싶어함
    **Sliding Window**
       - 각 Pixel별로 근처의 맥락을 파악하기 위해서 pixel size보다 더 큰 patch를 CNN에 넣어서 classify
       - pixel 개수 * CNN 만큼의 연산이 필요해서 매우 비효율적이고, pixel 별로 다른 CNN을 실행하기에 features을 공유하지 못해서 발생하는 비효율성의 문제도 존재
@@ -448,17 +455,101 @@
       - 이 방식의 경우 전체 이미지를 downsampling 없이 CNN에 넣기에 CNN의 연산값이 너무 비싸짐
       - (With downsampling and upsampling) input: [3 x H x W] -> High-res: [D1 x H/2 x W/2] -> Med-res: [D2 x H/4 x W/4] -> Low-res: [D3 x H/4 x W/4] -> Med-res -> High-res -> [C x H x W] -> Predictions: [H x W]
       - Loss function의 경우, 모든 pixel에 대해 Softmax를 사용하고 이를 전부 더함 -> 이 loss를 이용해서 backpropagation을 할 수 있음
+   **U-Net**
+      - Fully Convolution with upsampling과 비슷하지만, Downsampling을 하기 전 feature 정보를 이후 upsampling을 할 때, 전달해서 사용
 5. **Upsampling에 대해**
    - Nearest Neighbor: 크기를 키운 후, 해당 크기를 전부 같은 값으로 채움
    - Bed of Nails: 크기를 키운 후, 왼쪽 위에 해당 값을 채우고 나머지 값을 0으로 채움
    - Max Unpooling: Max Polling을 할 때, 어느 pixel에서 값이 max였는 지에 대한 position 정보를 저장한 후, 이를 Unpooling할 때 크기를 키우고 해당 position에 그 정보를 대입, 나머지 값은 0으로 채움
-   - Learnable Upsampling: 
+   **Learnable Upsampling**
+      - 초기의 경우엔 Encoding 과정에서 사용된 filter의 가중치를 Convolution Matrix로 바꾼 뒤, 이 값을 Decoder 과정에서 Convolution Matrix의 Transpose를 사용해서 원본의 값을 복구
+      - 하지만 이 경우 Convolution Matrix에는 0이 많기에 원본을 복구하는 것에 문제가 발생할 수 있고, 이 점을 해결하기 위해서 이 Weight를 학습시키는 방식으로 발전
+6. **Object Detection에 대해**
+   - 기존의 Classification에 해당 class에 해당하는 객체의 Localization 정보도 필요
+   **Single Object**
+      - CNN을 통해 나온 feature 정보를 사용하여 Class Scores와 Box Coordinates에 관한 정보들을 추출하고 각각 Softmax, L2 Loss를 사용하여 손실값을 합쳐서 최종 Loss를 구하는 방식
+   **Multiple Objects**
+      - image를 여러개의 crops로 나눈 후, CNN을 실행해서 해당 crop이 배경인지, 아니면 다른 object인지 판단하는 방식
+      - 하지만 무작정 여러개의 crops로 나누는 것은 너무나 많은 CNN 연산을 필요로 하고 이는 computationally expensive
+      - Selective Search: object가 있을것 같은 위치를 찾고 그 위치에서만 CNN을 실행##### 2. Transformer의 범용성
+**Q.** 상대적으로 간단해 보이는 Transformer의 작동 방식에도 불구, 어떻게 이렇게 많은 분야에서 사용될 수 있는지에 대한 의문
+> **A.**
+> - 기존 모델인 CNN과 RNN은 근처 픽셀끼리 뭉쳐야 효율적이다, 순서대로 봐야 효율적이다 라는 인간의 편견을 가짐, Transformer는 그러한 편견을 가지지 않고 설계되었기에 더욱 효율적.
+> - CNN, RNN은 상황에 상관없이 항상 같은 가중치가 연산에서 사용, 하지만 Transformer는 input data X에 따라 가중치가 변화하는 특성을 가지기에 데이터에 유연하게 대처 가능.
+> - CNN, RNN은 기존의 데이터가 이후의 구조까지 연결되려면 많은 Layer를 거쳐야 함. 하지만 Transformer는 Self-Attention 한번을 통해 멀리 떨어진 Pixel 끼리의 정보 교환이 가능. 
+
+---
+
+### Lecture 9: Object Detection, Image Segmentation, Visualizing and Understanding
+
+> **Main Keywords:** Vision Transformers, Semantic Segmentation, Upsampling
+
+#### 배운 점
+
+1. **ViT에 대해**
+   - Image를 patches로 나눈 후, 이를 D차원으로 만든 후, Positional Embedding을 추가
+   - 이 input을 Transformer에 넣은 후, 새로운 input을 추가하고 이 값을 통해서 나온 output을 C차원으로 만들어서 scores를 확인
+   - 또는 D차원의 값을 C차원으로 맞추기 위해, Average Pooling을 사용함
+3. **MoE에 대해**
+   - Transformer 내에 있는 MLP에 대해 기존의 가중치 값을 W1: [D x 4D], W2: [4D x D] -> W1: [E x D x 4D], W2: [E x 4D x D]로 변경
+   - Router가 E보다 작은 A개의 특정 분야에서의 전문가를 고른 후 이 그룹을 이용해서 결과 도출
+   - E의 값은 Hyperparameter
+4. **Semantic Segmentation에 대해**
+   - Semantic Segmentation의 목표는 각 픽셀별로 우리가 원하는 label를 기준으로 classify하는 것
+   - 즉 Semantic Segmentation은 어떤 객체가 어디에 있는지를 알고 싶은 것이 아닌, 특정 pixel이 어느 label에 속하는지 알고 싶어함
+   **Sliding Window**
+      - 각 Pixel별로 근처의 맥락을 파악하기 위해서 pixel size보다 더 큰 patch를 CNN에 넣어서 classify
+      - pixel 개수 * CNN 만큼의 연산이 필요해서 매우 비효율적이고, pixel 별로 다른 CNN을 실행하기에 features을 공유하지 못해서 발생하는 비효율성의 문제도 존재
+   **Convolution**
+      - pixel size보다 더 큰 patch를 CNN에 넣는 것이 아닌, image 자체를 CNN에 넣는 방법
+      - 하지만 CNN architectures는 보통 layer가 깊어질 수록, pool이나 stride를 사용해서 data의 크기를 줄이는 방식을 사용
+      - 이 점은 모든 pixel에 class를 할당하는 Semantic Segmentation의 경우엔 기존 이미지의 크기를 output에서 유지해야 하기에 문제가 발생
+   **Fully Convolutional**
+      - (Without dowmsampling) input: [3 x H x W] -> Convolutions: [D x H x W] -> Scores: [C x H x W] -> Predictions: [H x W]의 형태로 진행
+      - 이 방식의 경우 전체 이미지를 downsampling 없이 CNN에 넣기에 CNN의 연산값이 너무 비싸짐
+      - (With downsampling and upsampling) input: [3 x H x W] -> High-res: [D1 x H/2 x W/2] -> Med-res: [D2 x H/4 x W/4] -> Low-res: [D3 x H/4 x W/4] -> Med-res -> High-res -> [C x H x W] -> Predictions: [H x W]
+      - Loss function의 경우, 모든 pixel에 대해 Softmax를 사용하고 이를 전부 더함 -> 이 loss를 이용해서 backpropagation을 할 수 있음
+   **U-Net**
+      - Fully Convolution with upsampling과 비슷하지만, Downsampling을 하기 전 feature 정보를 이후 upsampling을 할 때, 전달해서 사용
+5. **Upsampling에 대해**
+   - Nearest Neighbor: 크기를 키운 후, 해당 크기를 전부 같은 값으로 채움
+   - Bed of Nails: 크기를 키운 후, 왼쪽 위에 해당 값을 채우고 나머지 값을 0으로 채움
+   - Max Unpooling: Max Polling을 할 때, 어느 pixel에서 값이 max였는 지에 대한 position 정보를 저장한 후, 이를 Unpooling할 때 크기를 키우고 해당 position에 그 정보를 대입, 나머지 값은 0으로 채움
+   **Learnable Upsampling**
+      - 초기의 경우엔 Encoding 과정에서 사용된 filter의 가중치를 Convolution Matrix로 바꾼 뒤, 이 값을 Decoder 과정에서 Convolution Matrix의 Transpose를 사용해서 원본의 값을 복구
+      - 하지만 이 경우 Convolution Matrix에는 0이 많기에 원본을 복구하는 것에 문제가 발생할 수 있고, 이 점을 해결하기 위해서 이 Weight를 학습시키는 방식으로 발전
+6. **Object Detection에 대해**
+   - 기존의 Classification에 해당 class에 해당하는 객체의 Localization 정보도 필요
+   **Single Object**
+      - CNN을 통해 나온 feature 정보를 사용하여 Class Scores와 Box Coordinates에 관한 정보들을 추출하고 각각 Softmax, L2 Loss를 사용하여 손실값을 합쳐서 최종 Loss를 구하는 방식
+   **Multiple Objects**
+      - image를 여러개의 crops로 나눈 후, CNN을 실행해서 해당 crop이 배경인지, 아니면 다른 object인지 판단하는 방식
+      - 하지만 무작정 여러개의 crops로 나누는 것은 너무나 많은 CNN 연산을 필요로 하고 이는 computationally expensive
+      - Selective Search: object가 있을것 같은 위치를 찾고 그 위치에서만 CNN을 실행
+      **Slow R-CNN**
+         - object가 있을만한 Regions을 224 x 224의 크기로 조정 후, 이 값을 각각의 CNN에 넣어서 Bbox reg, SVMs을 통해 object의 좌표와 class label 값을 얻음
+         - 하지만 이 방식의 경우 마찬가지로 너무나 많은 CNN 연산을 필요로 함
+      **Fast R-CNN**
+         - 전체 imgae를 CNN에 넣어서 features를 추출 -> 해당 features에서 Object가 있을만한 부분을 CNN을 실행하여 Object category와 Box offset을 구함
+         - RoI 부분을 CNN으로 돌린다라는 개념은 Slow R-CNN과 비슷하지만 CNN의 크기와 연산량을 고려하건대 훨씬 좋은 성능을 보여줌
+   **Region Proposal Network**
+      - Input image를 Image features로 변환 후 이를 20 x 15 크기의 boxes로 나눠서 object일지 아닐지를 판단 후 boxes의 크기를 정함
+      - 이는 Image -> Features -> Objectness, Bbox reg 확인이라는 2개의 단계로 구분 -> 이는 비효율적
+   **Single-Stage Object Detectors**
+      **YOLO**
+        
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. MoE에서의 학습
 **Q.** 초기에 가중치를 랜덤하게 설정했을 때, 이 약간의 차이가 특정 그룹을 특정 분야에서의 전문가로 만든다는데, 이 가능성에 대한 의문 
 > **A.** 초기에 가중치가 랜덤하게 설정되는 과정에서 특정 그룹이 우리가 해결하고자 하는 문제를 다른 그룹에 비해 약간이라도 더 좋은 성능을 낸다면, 그 그룹으로 하여금 그 문제를 더욱 잘 풀게끔 만들면서 각각의 그룹이 특정 분야에 더 좋은 성능을 내는 방향으로 학습이 진행
+
+##### 2. Slow R-CNN과 Fast R-CNN에서의 차이
+**Q.** Slow R-CNN과 Fast R-CNN 모두 이미지가 있을만한 부분을 CNN을 돌린다는 점에서 같은데 이 부분에서의 속도 차이에 대한 의문
+> **A.**
+> - Slow R-CNN: 이미지 원본의 일부를 CNN으로 넣어서 처리하기에 특징 추출 + 분류 + 위치 확인과 같은 어려운 작업을 전부 시행 -> 따라서 연산량이 많음
+> - Fast R-CNN: 이미지에서 특징을 추출해서 이를 CNN에 넣기에 분류 + 위치 확인 정도의 상대적으로 쉬운 작업만 시행 -> 연산량이 적음
 
 ---
 
