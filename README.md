@@ -66,7 +66,8 @@
 1. Assignment3 - Image Captioning with Transformers 종료
 2. Lecture 13: Generative Models 1 수강
 
-### 2026년
+### 2026년 1월 17일
+1. GitHub에 강의 9강 정리
 
 ### Lecture 1: Introduction
 #### 배운 점
