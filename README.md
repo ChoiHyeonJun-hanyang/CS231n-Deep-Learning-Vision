@@ -428,60 +428,6 @@
 
 ### Lecture 9: Object Detection, Image Segmentation, Visualizing and Understanding
 
-> **Main Keywords:** Vision Transformers, Semantic Segmentation, Upsampling
-
-#### 배운 점
-
-1. **ViT에 대해**
-   - Image를 patches로 나눈 후, 이를 D차원으로 만든 후, Positional Embedding을 추가
-   - 이 input을 Transformer에 넣은 후, 새로운 input을 추가하고 이 값을 통해서 나온 output을 C차원으로 만들어서 scores를 확인
-   - 또는 D차원의 값을 C차원으로 맞추기 위해, Average Pooling을 사용함
-3. **MoE에 대해**
-   - Transformer 내에 있는 MLP에 대해 기존의 가중치 값을 W1: [D x 4D], W2: [4D x D] -> W1: [E x D x 4D], W2: [E x 4D x D]로 변경
-   - Router가 E보다 작은 A개의 특정 분야에서의 전문가를 고른 후 이 그룹을 이용해서 결과 도출
-   - E의 값은 Hyperparameter
-4. **Semantic Segmentation에 대해**
-   - Semantic Segmentation의 목표는 각 픽셀별로 우리가 원하는 label를 기준으로 classify하는 것
-   - 즉 Semantic Segmentation은 어떤 객체가 어디에 있는지를 알고 싶은 것이 아닌, 특정 pixel이 어느 label에 속하는지 알고 싶어함
-   **Sliding Window**
-      - 각 Pixel별로 근처의 맥락을 파악하기 위해서 pixel size보다 더 큰 patch를 CNN에 넣어서 classify
-      - pixel 개수 * CNN 만큼의 연산이 필요해서 매우 비효율적이고, pixel 별로 다른 CNN을 실행하기에 features을 공유하지 못해서 발생하는 비효율성의 문제도 존재
-   **Convolution**
-      - pixel size보다 더 큰 patch를 CNN에 넣는 것이 아닌, image 자체를 CNN에 넣는 방법
-      - 하지만 CNN architectures는 보통 layer가 깊어질 수록, pool이나 stride를 사용해서 data의 크기를 줄이는 방식을 사용
-      - 이 점은 모든 pixel에 class를 할당하는 Semantic Segmentation의 경우엔 기존 이미지의 크기를 output에서 유지해야 하기에 문제가 발생
-   **Fully Convolutional**
-      - (Without dowmsampling) input: [3 x H x W] -> Convolutions: [D x H x W] -> Scores: [C x H x W] -> Predictions: [H x W]의 형태로 진행
-      - 이 방식의 경우 전체 이미지를 downsampling 없이 CNN에 넣기에 CNN의 연산값이 너무 비싸짐
-      - (With downsampling and upsampling) input: [3 x H x W] -> High-res: [D1 x H/2 x W/2] -> Med-res: [D2 x H/4 x W/4] -> Low-res: [D3 x H/4 x W/4] -> Med-res -> High-res -> [C x H x W] -> Predictions: [H x W]
-      - Loss function의 경우, 모든 pixel에 대해 Softmax를 사용하고 이를 전부 더함 -> 이 loss를 이용해서 backpropagation을 할 수 있음
-   **U-Net**
-      - Fully Convolution with upsampling과 비슷하지만, Downsampling을 하기 전 feature 정보를 이후 upsampling을 할 때, 전달해서 사용
-5. **Upsampling에 대해**
-   - Nearest Neighbor: 크기를 키운 후, 해당 크기를 전부 같은 값으로 채움
-   - Bed of Nails: 크기를 키운 후, 왼쪽 위에 해당 값을 채우고 나머지 값을 0으로 채움
-   - Max Unpooling: Max Polling을 할 때, 어느 pixel에서 값이 max였는 지에 대한 position 정보를 저장한 후, 이를 Unpooling할 때 크기를 키우고 해당 position에 그 정보를 대입, 나머지 값은 0으로 채움
-   **Learnable Upsampling**
-      - 초기의 경우엔 Encoding 과정에서 사용된 filter의 가중치를 Convolution Matrix로 바꾼 뒤, 이 값을 Decoder 과정에서 Convolution Matrix의 Transpose를 사용해서 원본의 값을 복구
-      - 하지만 이 경우 Convolution Matrix에는 0이 많기에 원본을 복구하는 것에 문제가 발생할 수 있고, 이 점을 해결하기 위해서 이 Weight를 학습시키는 방식으로 발전
-6. **Object Detection에 대해**
-   - 기존의 Classification에 해당 class에 해당하는 객체의 Localization 정보도 필요
-   **Single Object**
-      - CNN을 통해 나온 feature 정보를 사용하여 Class Scores와 Box Coordinates에 관한 정보들을 추출하고 각각 Softmax, L2 Loss를 사용하여 손실값을 합쳐서 최종 Loss를 구하는 방식
-   **Multiple Objects**
-      - image를 여러개의 crops로 나눈 후, CNN을 실행해서 해당 crop이 배경인지, 아니면 다른 object인지 판단하는 방식
-      - 하지만 무작정 여러개의 crops로 나누는 것은 너무나 많은 CNN 연산을 필요로 하고 이는 computationally expensive
-      - Selective Search: object가 있을것 같은 위치를 찾고 그 위치에서만 CNN을 실행##### 2. Transformer의 범용성
-**Q.** 상대적으로 간단해 보이는 Transformer의 작동 방식에도 불구, 어떻게 이렇게 많은 분야에서 사용될 수 있는지에 대한 의문
-> **A.**
-> - 기존 모델인 CNN과 RNN은 근처 픽셀끼리 뭉쳐야 효율적이다, 순서대로 봐야 효율적이다 라는 인간의 편견을 가짐, Transformer는 그러한 편견을 가지지 않고 설계되었기에 더욱 효율적.
-> - CNN, RNN은 상황에 상관없이 항상 같은 가중치가 연산에서 사용, 하지만 Transformer는 input data X에 따라 가중치가 변화하는 특성을 가지기에 데이터에 유연하게 대처 가능.
-> - CNN, RNN은 기존의 데이터가 이후의 구조까지 연결되려면 많은 Layer를 거쳐야 함. 하지만 Transformer는 Self-Attention 한번을 통해 멀리 떨어진 Pixel 끼리의 정보 교환이 가능. 
-
----
-
-### Lecture 9: Object Detection, Image Segmentation, Visualizing and Understanding
-
 > **Main Keywords:** Vision Transformers, Semantic Segmentation, Upsampling, Object Detection, Fast R-CNN, RPN, YOLO, DETR, Instance Segmentation, Mask R-CNN, CAM, Grad-CAM, RoI Pool
 
 #### 배운 점
