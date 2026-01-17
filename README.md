@@ -1,4 +1,4 @@
-#CS231n - Deep Learning for Computer Vision
+# CS231n - Deep Learning for Computer Vision
 
 스탠포드 대학의 CS231n 강의를 수강하며 진행한 과제와 학습 내용을 정리하는 레포지토리입니다.
 
