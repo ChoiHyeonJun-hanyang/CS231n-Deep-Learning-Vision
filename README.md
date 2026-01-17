@@ -482,7 +482,7 @@
 
 ### Lecture 9: Object Detection, Image Segmentation, Visualizing and Understanding
 
-> **Main Keywords:** Vision Transformers, Semantic Segmentation, Upsampling
+> **Main Keywords:** Vision Transformers, Semantic Segmentation, Upsampling, Object Detection, Fast R-CNN, RPN, YOLO, DETR, Instance Segmentation, Mask R-CNN, CAM, Grad-CAM, RoI Pool
 
 #### 배운 점
 
@@ -532,13 +532,45 @@
       **Fast R-CNN**
          - 전체 imgae를 CNN에 넣어서 features를 추출 -> 해당 features에서 Object가 있을만한 부분을 CNN을 실행하여 Object category와 Box offset을 구함
          - RoI 부분을 CNN으로 돌린다라는 개념은 Slow R-CNN과 비슷하지만 CNN의 크기와 연산량을 고려하건대 훨씬 좋은 성능을 보여줌
+         - Faster R-CNN으로 발전하는 경우, CNN 대신 RPN을 사용, 또한 이렇게 구한 위치정보를 RoI pooling을 통해 Crop하고 이후 Per Region Network를 실행
    **Region Proposal Network**
       - Input image를 Image features로 변환 후 이를 20 x 15 크기의 boxes로 나눠서 object일지 아닐지를 판단 후 boxes의 크기를 정함
       - 이는 Image -> Features -> Objectness, Bbox reg 확인이라는 2개의 단계로 구분 -> 이는 비효율적
    **Single-Stage Object Detectors**
       **YOLO**
-        
-
+         - B개의 bounding boxes에서 P(object): box에 object가 있을 확률, P(class): box내의 object가 어떤 class에 속하는지 를 구함
+         - You Only Look Once의 줄임말로 real-time object detection임
+         - S x S grid로 input을 나누고, 이를 각각 Bouding boxes + confidence와 Class probability map로 나눠서 object detect와 classification을 따로 수행한 후 이를 합쳐서 Final detections를 제작
+      **DETR**
+         - 간단한 object detection pipeline, image를 CNN을 사용해서 features를 추출한 후, 이를 transformer encoder-decoder에 넣어서 예측하는 방식
+         - 랜덤하게 boxes를 지정해서 그 부분을 확인하는 것이 아닌, transformer가 학습을 통해서 boxes를 알아서 정하는 방식을 채택
+         - Transformer는 spatial 정보를 확인할 수 없기에, positional encoding을 이용
+         - Encoder에서 얻는 정보들을 decoder의 hidden에 넣고 object queries를 이용하여 나온 output을 FFN을 통해 최종 결과 도출
+7. **Instance Segmentation에 대해**
+   - Object Detection을 pixel 단위로 하는 방식
+   **Mask R-CNN**
+      - Fast R-CNN에서 RoI pooling한 후, Mask Prediction을 추가로 하는 방식
+      - 기존에는 c차원의 Classification Scores와 4C차원의 Box coordinates (per class), 어떤 class가 발견될지 모르기에 모든 class의 mask를 C x 28 x 28에 저장
+8. **Visual Viewpoint에 대해**
+   - Linear Classifier는 가중치에 있는 template와 image의 유사성을 보는 것과 비슷
+   - CNN architectures에서 첫번째 layer의 filter를 visualize한다면 상대적으로 간단한 정보들만을 나타내고 있음
+   - Saliency maps: pixel의 중요도를 시각화한 maps, 우리가 원하는 것은 특정 pixels의 중요도이기에 pixel이 변화하면서 발생하는 scores의 gradient를 확인
+   - CAM: 마지막 CNN의 features (H x W x K)를 Global Average Pooling을 통해 각 채널의 평균값을 낸 후, 가중치를 각 채널마다 넣어서 각 채널의 중요도를 확인, 가중치를 역추적해서 어느 채넣의 정보가 중요한지 확인하고 해당 값을 히트맵에서 강조
+   - 하지만 CAM은 마지막 Conv의 features만을 반영함
+   - 이를 해결하기 위해서 Grad-CAM을 도입
+   - layer의 값이 변경되었을 때, gradient의 값이 크다면 중요한 layer라는 의미
+   - Feature map에서 먼저 미분을 하고, 각 pixel 혹은 layer의 중요도인 가짜 w인 a를 만들고 이를 w 대신 사용
+   - CNN의 경우, filter가 정보를 계속해서 압축하고 섞어버림 -> 미분을 통한 역추적 필요
+   - 하지만 ViT와 같이 Transformer의 경우 거의 생략 없이 행렬 연산으로 진행 -> 역추적이 쉽고 단순히 가중치에 접근 가능
+   - Transformer에서 CLS Token이 있다면 Attention map을 확인, 만약 없다면 각 층의 Attention Matrix는 Similarities를 곱하면 됨
+   - guided backprop: Backward pass에서도 입력이 양수인 부분만 그대로 전달, 이를 사용 시 이미지 시각화가 잘 됨
+9. **RoI Pool에 대해**
+   - Object가 있을만한 부분을 특정 크기의 2x2 block으로 Max Pool을 사용해서 만듦
+   - 하지만 이런 경우엔 Region features가 손실이 발생할 수 있음
+   - 이를 해결하기 위해 RoI Align을 사용
+   - RoI Align는 Object가 있을만한 block을 특정 크기의 Grid로 나눈 후, 각 Grid 안에 4개의 가상 점 (꼭 pixel에 걸치지 않아도 됨)을 균등하게 찍음
+   - 이후 소수점인 값에 대해 근처 Pixel 값을 따져가며 적절한 값을 찾은 후, 이를 활용하여 Max, Average Pool을 진행 
+    
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. MoE에서의 학습
@@ -550,6 +582,10 @@
 > **A.**
 > - Slow R-CNN: 이미지 원본의 일부를 CNN으로 넣어서 처리하기에 특징 추출 + 분류 + 위치 확인과 같은 어려운 작업을 전부 시행 -> 따라서 연산량이 많음
 > - Fast R-CNN: 이미지에서 특징을 추출해서 이를 CNN에 넣기에 분류 + 위치 확인 정도의 상대적으로 쉬운 작업만 시행 -> 연산량이 적음
+
+##### 3. DETR에서 Decoder의 object query
+**Q.** DETR에서 transformer decoder에 들어가는 input인 object queries의 역할에 대한 의문
+> **A.** object queries가 직접적으로 해당 patch를 의미하는 것은 아니지만, Transformer의 특성에 따라서 output이 증가하는 특성을 가지고 이 output은 FFN을 통해 block을 의미하기에 object queries의 개수를 늘리면 확인할 boxes의 개수를 늘리는 것과 같은 효과를 얻음. 
 
 ---
 
