@@ -72,7 +72,7 @@
 
 ### 2026년 1월 18일
 1. GitHub에 강의 10강 정리
-2. Lecture 14: Generative Models 2 수강
+2. Lecture 14: Generative Models 2 수강 시작 (GANs와 Diffusion Models: Intuition까지 진행)
 
 ### Lecture 1: Introduction
 #### 배운 점
