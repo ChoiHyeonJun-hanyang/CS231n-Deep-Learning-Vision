@@ -71,7 +71,8 @@
 1. GitHub에 강의 9강 정리
 
 ### 2026년 1월 18일
-1. GitHub에 강의 10강 정
+1. GitHub에 강의 10강 정리
+2. Lecture 14: Generative Models 2 수강
 
 ### Lecture 1: Introduction
 #### 배운 점
@@ -541,7 +542,7 @@
 
 ### Lecture 10: Video Understanding
 
-> **Main Keywords:** Video Classification, Single-Frame CNN, Late Fusion, Early Fusion, 3D Conv,
+> **Main Keywords:** Video Classification, Single-Frame CNN, Late Fusion, Early Fusion, 3D Conv, Measuring Motion, Two-Stream Networks, Long-term temporal structure, I3D, ViTs for Video, 
 
 #### 배운 점
 
@@ -551,6 +552,7 @@
    - 영상이 1920 x 1080의 images를 초당 30프레임 반복하는 형식이라면, Classification의 효율성을 위해 프레임들 중 일부만 이미지의 크기를 조절하여 분류에 사용
    - Training에서는 일부 프레임만을 학습에 사용한다면, Test에선 다양한 clips를 만든 후 각각에서 Classification을 한 후 이 값을 평균내서 최종 결과 도출
    - Test에선 모든 프레임을 전부 확인해야 하기에 이러한 방식을 채택 (Dropout의 방식과 비슷)
+   - Clip의 중요도가 각각의 Clip마다 다르기에 Clip Classifier을 통해서 실제로 해당 Clip이 주제와 맞는지를 비교한 후, 중요도를 넘김
 2. **Single-Frame CNN에 대해**
    - sampling 과정을 통해 선택된 video frames를 개별적으로 2D CNN에서 분류
    - video의 내용이 크게 변하지 않는 경우에 유리 (Time이 흐르더라도 상대적으로 고정된 이미지에 가깝기 때문에)
@@ -558,7 +560,7 @@
    **Late Fusion**
       - (with FC layers) 각각의 image frame을 CNN을 통해서 분류한다는 점에서 Single-Frame CNN과 비슷하지만, 이로 모인 features를 Flatten 시킨 후 MLP를 통해 최종 Class scores를 도출
       - 하지만 이 경우엔, T가 커질수록 feature의 개수가 많아지고 마지막 FC가 복잡해짐에 따라 parameter의 개수가 많아지면서 비효율성이 증가
-      - 이 문제를 해결하기 위해 Average Pooling을 사용, T x D x H' x W'의 형태로 Flatten 시킨 Features를 시공간을 기준으로 Average Pool을 사용하여 D차원으로 만든 후, 간단한 Linear 연산을 통해 결과 도출
+      - 이 문제를 해결하기 위해 Average Pooling을 사용, (T x D x H' x W')의 형태로 Flatten 시킨 Features를 시공간을 기준으로 Average Pool을 사용하여 D차원으로 만든 후, 간단한 Linear 연산을 통해 결과 도출
       - 하지만 이 경우에도 CNN을 통해 특징을 추출한 후, Average Pool을 사용했기에 각각의 image에 있는 low-level motion을 비교하기가 어려움 (Pool의 정보 손실에 의해)
    **Early Fusion**
       - Features을 추출하고 Pool을 할 경우 정보의 손실이 발생하니, 이를 해결하기 위해서 정보를 합친 후, 2D CNN을 사용
@@ -566,12 +568,57 @@
       - 하지만 다양한 정보를 가진 Image frames를 한번에 합쳐서 넣는 것은 충분하지 않음  (시간의 정보가 사라지기에)
       - 이 문제를 해결하기 위해 공간과 시간의 정보들을 천천히 합치는 3D CNN와 3D Pooling을 사용
 4. **3D Conv에 대해**
+   - 기존의 2D Conv와 같이 filter를 사용하여 input을 특정 구역으로 나눠서 해석한 후, 이를 통해 특징을 추출하는 방식
+   - 하지만 2D Conv와는 달리, input의 차원이 C x T x H x W로 바뀌고 Time 또한 H, W와 같이 filter에 곱해지는 방식으로 진행
+   - 이 방식을 사용할 시의 장점은 Time이 달라지더라도 같은 가중치 filter로 해결 가능하다는 것, 만약 특정 패턴이 Time이 다른 곳에 나타난다면 2D Conv에선 다른 시간대이기에 이를 확인하기 위해서 다른 가중치가 필요
+5. **Measuring Motion에 대해**
+   - Video에서 actions을 분류할 때, 움직임을 분석하는 것은 도움이 됨
+   - Motion을 측정하는 방법은 frames 사이에 특정 pixel이 얼마나 움직였는 지를 확인
+6. **Two-Stream Networks에 대해**
+   - Input Video (T x 3 x H x W) -> Single frame (3 x H x W) (Spatial stream ConvNet) + Multi-frame optical flow (2(T-1) x H x W) (Temporal stream ConvNet) 으로 나눈 후 시간과 공간 해석을 달리하여 연산의 효율성을 챙김
+   - Temporal stream ConvNet에선 Early fusion을 사용하는데, 이 이유는 이미 Optical flow가 시간 순서의 정보를 가지고 있음
+7. **Long-term temporal structure에 대해**
+   - CNN을 여러개 사용하고, 여기서 나온 정보를 시간의 흐름에 따라 고려하는 방식이 필요 -> 이는 RNN의 개념과 비슷
+   - Multi-layer RNN의 개념과 비슷한 Recurrent Convolutional Network를 사용, RNN의 개념인 이전의 hidden state를 현재의 input과 합쳐서 결론을 내는 것을 가져와서 각각의 연산을 단순한 linear 연산이 아닌 Conv 연산으로 대체한 방식
+   - Features for layer L, timestep t = tanh(2D Conv(Features from layer L, timestep t-1: W_h) + 2D Conv(Features from layer L-1, timestep t: W_x))
+   - 하지만 Recurrent CNN을 사용한다면 RNN의 단점인 현재의 hidden state를 구할 때, 이전의 hidden state를 전부 구해야 한다는 문제가 있고 이는 굉장히 비효율적
+   - Spatio-Temporal Self-Attention (Nonlocal Block): CNN을 통해 얻어낸 Features를 Residual Connection을 포함한 Transformers에 넣은 후 Output을 얻어내는 방식
+   - 3D CNN -> Nonlocal Block -> 3D CNN -> Nonlocal Block -> ... 의 순서로 진행
+   - 3D CNN의 경우, depth를 깊게 하며 시야를 넓힘. 하지만 이 경우엔 parameter의 개수가 너무 많아지기에 중간에 Nonlocal Block을 사용해서 현재는 CNN이 동시에 인식하지 못하는 부분을 한번의 연산으로 연결
+8. **Inflating 2D Networks to 3D (I3D)에 대해**
+   - 2D (K_h x K_w) Conv / Pool을 3D (K_t x K_h x K_w) Conv / Pool로 변경, 2D에서 사용하던 가중치를 K_t만큼 나눠서 사용
+   - 기존의 image (3 x H x W)를 (3 x K_t x H x W)로 바꾼 후, 3D CNN에서 학습한다면 2D Model의 성능부터 학습 시작 가능
+9. **ViTs for Video에 대해**
+   - Factorized attention: self attention의 경우 시공간의 정보가 섞여 연산량이 증가, 연산량을 줄이기 위해 시간과 공간을 따로 분리
+   - Pooling module: 초반 layer에선 많은 토큰을 받는 대신, 채넣의 개수를 적게 (디테일한 정보 위주), 후반 layer에선 적은 토큰을 받는 대신, 채널을 늘림 (함축된 의미)
+   - Video masked autoencoders: 자기주도학습과 비슷, Video의 일정 부분을 가린 후, 남은 정보로 유추하여 가려진 부분을 복원하는 방식으로 학습
+10. **Temporal Action Localization에 대해**
+   - long untrimmed video sequence에선 다른 동작들을 연달하서 구분할 수 있어야 함.
+   - 이를 해결하기 위해 Faster R-CNN과 비슷한 방식을 사용 -> temporal proposals을 만들고 이를 통해 classify 진행
+11. **Audio Information에 대해**
+   - 행동을 판단할 때, Motion 정보와 Spatial 정보 외에도 영상의 Audio 정보 또한 중요
+   - Spectrogram: 음향 정보를 이미지로 변환하는 방법
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. Video Classification에서의 이미지 손실
 **Q.** 영상에서의 변화는 갑작스럽지 않기에, frames 중 일부만 sampling을 통해서 Video Classification에 사용되는 점은 납득했으나, 이미지를 112 x 112와 같은 크기로 조절할 시 정보 손실 우려 의문
 > **A.** 이미지의 크기를 줄이면서 공간이 잃은 정보를 여러 개의 frames가 채워줌, 또한 이미지를 그대로 넘길 시 연산량의 문제도 존재
+
+##### 2. Single Frame에서의 최종 선택
+**Q.** Single Frame CNN 방식에선 각각의 Frame을 다른 CNN에 넣고 나온 결과를 어떤 식으로 결론내는 지에 대한 의문
+> **A.** 주로 각각의 이미지가 생각하는 확신과 그 class label을 반영하는 Average Predictions을 활용
+
+##### 3. Training에서의 Data
+**Q.** Training을 할 때, Sports-1M과 같은 경우, Class label이 500개로 굉장히 많고 이러한 경우엔 우리가 이 dataset의 일부분만 학습하고 싶다고 할 때, 상대적으로 뽑히지 않은 class data에 대한 Prediction 문제
+> **A.** 그런 경우 문제가 발생할 수 있음. 이를 방지하기 위해서 class 별 data의 개수를 맞춰서 가져오는 방식을 채택하며, 만약 데이터 개수가 부족할 시 Data Augmentation을 사용하여 데이터 개수를 증가  
+
+##### 4. Accuracy on UCF-101에서의 의문
+**Q.** Accuracy on UCF-101을 본다면 3D CNN의 정확도가 너무 낮고, Spatial only도 낮은 것에 반해 Temporal only의 정확도가 높은 것에 대한 의문
+> **A.**
+> - 3D CNN: 데이터의 부족으로 인해 Overfitting이 발생하여 정확도가 낮음
+> - Spatial only: 마찬가지로 이미지를 학습시키는 것과 비슷하기에 Overfitting으로 인해 정확도가 상대적으로 낮음
+> - Temporal only: Motion이라는 정보가 Video을 분류하는 것에 있어서 Key Information이기에 Overfitting이 발생할 가능성이 낮고, 발생하더라도 문제가 적게 발생
 
 ---
 
