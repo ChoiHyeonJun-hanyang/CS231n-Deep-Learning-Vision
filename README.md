@@ -24,8 +24,9 @@
 - [x] Assignment 2 종료
 - [x] Assignment 3 시작
 
-### 4주차 (예정)
-- [ ] 강의 14강 ~ 18강 수강
+### 4주차 (진행중)
+- [ ] 강의 14강 수강
+- [ ] 강의 15강 ~ 18강 수강
 - [ ] Assignment 3 종료
 - [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
 
@@ -68,6 +69,9 @@
 
 ### 2026년 1월 17일
 1. GitHub에 강의 9강 정리
+
+### 2026년 1월 18일
+1. GitHub에 강의 10강 정
 
 ### Lecture 1: Introduction
 #### 배운 점
@@ -434,7 +438,7 @@
 
 1. **ViT에 대해**
    - Image를 patches로 나눈 후, 이를 D차원으로 만든 후, Positional Embedding을 추가
-   - 이 input을 Transformer에 넣은 후, 새로운 input을 추가하고 이 값을 통해서 나온 output을 C차원으로 만들어서 scores를 확인
+   - 이 input을 Transformer에 넣은 후, input으로 Learnable CLS Token을 넣고 이 값을 통해서 나온 output을 C차원으로 만들어서 scores를 확인
    - 또는 D차원의 값을 C차원으로 맞추기 위해, Average Pooling을 사용함
 3. **MoE에 대해**
    - Transformer 내에 있는 MLP에 대해 기존의 가중치 값을 W1: [D x 4D], W2: [4D x D] -> W1: [E x D x 4D], W2: [E x 4D x D]로 변경
@@ -537,18 +541,37 @@
 
 ### Lecture 10: Video Understanding
 
-> **Main Keywords:** 
+> **Main Keywords:** Video Classification, Single-Frame CNN, Late Fusion, Early Fusion, 3D Conv,
 
 #### 배운 점
 
-1. 
-   -
+1. **Video Classification에 대해**
+   - Video = 2D + Time, 우리가 하고자 하는 것은 Video를 보고 class label을 결정 (주로 객체나 행동)
+   - 하지만 이를 Image Classification과 같은 방식을 사용해서 처리하기엔 2D image의 Image Classification을 Time의 횟수만큼 반복해야 하고 이는 너무 많은 연산량을 요구
+   - 영상이 1920 x 1080의 images를 초당 30프레임 반복하는 형식이라면, Classification의 효율성을 위해 프레임들 중 일부만 이미지의 크기를 조절하여 분류에 사용
+   - Training에서는 일부 프레임만을 학습에 사용한다면, Test에선 다양한 clips를 만든 후 각각에서 Classification을 한 후 이 값을 평균내서 최종 결과 도출
+   - Test에선 모든 프레임을 전부 확인해야 하기에 이러한 방식을 채택 (Dropout의 방식과 비슷)
+2. **Single-Frame CNN에 대해**
+   - sampling 과정을 통해 선택된 video frames를 개별적으로 2D CNN에서 분류
+   - video의 내용이 크게 변하지 않는 경우에 유리 (Time이 흐르더라도 상대적으로 고정된 이미지에 가깝기 때문에)
+3. **Fusion에 대해**
+   **Late Fusion**
+      - (with FC layers) 각각의 image frame을 CNN을 통해서 분류한다는 점에서 Single-Frame CNN과 비슷하지만, 이로 모인 features를 Flatten 시킨 후 MLP를 통해 최종 Class scores를 도출
+      - 하지만 이 경우엔, T가 커질수록 feature의 개수가 많아지고 마지막 FC가 복잡해짐에 따라 parameter의 개수가 많아지면서 비효율성이 증가
+      - 이 문제를 해결하기 위해 Average Pooling을 사용, T x D x H' x W'의 형태로 Flatten 시킨 Features를 시공간을 기준으로 Average Pool을 사용하여 D차원으로 만든 후, 간단한 Linear 연산을 통해 결과 도출
+      - 하지만 이 경우에도 CNN을 통해 특징을 추출한 후, Average Pool을 사용했기에 각각의 image에 있는 low-level motion을 비교하기가 어려움 (Pool의 정보 손실에 의해)
+   **Early Fusion**
+      - Features을 추출하고 Pool을 할 경우 정보의 손실이 발생하니, 이를 해결하기 위해서 정보를 합친 후, 2D CNN을 사용
+      - 기존의 Image frames는 (T x 3 x H x W)이기에 2D CNN에 넣기 위해서 (3T x H x W)로 크기 변경
+      - 하지만 다양한 정보를 가진 Image frames를 한번에 합쳐서 넣는 것은 충분하지 않음  (시간의 정보가 사라지기에)
+      - 이 문제를 해결하기 위해 공간과 시간의 정보들을 천천히 합치는 3D CNN와 3D Pooling을 사용
+4. **3D Conv에 대해**
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Video Classification에서의 이미지 손실
+**Q.** 영상에서의 변화는 갑작스럽지 않기에, frames 중 일부만 sampling을 통해서 Video Classification에 사용되는 점은 납득했으나, 이미지를 112 x 112와 같은 크기로 조절할 시 정보 손실 우려 의문
+> **A.** 이미지의 크기를 줄이면서 공간이 잃은 정보를 여러 개의 frames가 채워줌, 또한 이미지를 그대로 넘길 시 연산량의 문제도 존재
 
 ---
 
