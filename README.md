@@ -275,20 +275,20 @@
    - 이는 학습 과정에서 model로 하여금 데이터를 학습할 때, 일부 특징을 무시하고 학습하도록 강제하기에 Regularization의 기능을 함
    - test time에선 모든 특징을 전부 반영해서 classify해야하기에 모든 뉴런을 활성화시킨 상태에서 최종 output에 p(확률)을 곱해줘야함
 3. **Activation Functions에 대해**
-   **Sigmoid**
+   - **Sigmoid**
       - 값을 0과 1 사이의 확률값으로 변경해주는 Sigmoid의 경우, 모든 정의역에서 미분가능하지만, 문제가 존재
       - 많은 층에서 Sigmoid를 연속적으로 사용하는 경우, 계속해서 gradient 값이 작아짐 -> 이는 Backpropagation 과정에서 문제가 발생
       - 특히 절댓값이 큰 경우, gradient가 0에 가까워지는 문제가 커짐
-   **ReLU**
+   - **ReLU**
       - Non-linearity 추가 가능
       - 하지만 양수와 음수가 많이 섞인 데이터의 경우, ReLU는 0보다 작은 값을 0으로 처리하기에 해당 가중치 부분이 죽는 경우가 발생
       - 이를 해결하기 위해 GELU, Leaky ReLU 등 다양한 응용형태가 존재
 4. **CNN Architectures에 대해** 
-   **VGGNet**
+   - **VGGNet**
       - 3x3 Conv (stride 1, pad 1), 2x2 MAX POOL (stride 2)를 사용
       - 3x3 Conv를 3번 연달아서 사용하는 것은 7x7 Conv와 같은 효과를 냄 (effective receptive field의 측면에서), 하지만 # of parameters 27C << 49C 로 3x3 Conv가 훨씬 효율적
       - 또한 Activation Funtion은 주로 Convolution 연산 이후 실행하는데 activation function의 실행 횟수가 늘어나기에 더욱 복잡한 형태를 분류 가능
-   **ResNet**
+   - **ResNet**
       - 기존의 Conv, ReLU와 Pool을 순서대로 쌓는 방식의 model은 깊이가 깊어질수록 모델의 성능이 떨어지는 문제가 존재
       - 이는 모델의 성능이 매우 좋아 과적합 (Overfitting) 의 상태가 된 것이 아니라, 모델의 학습이 제대로 이루어지지 않아서 발생한 문제
       - 이 문제를 해결하기 위해 Identity mapping을 이용한 ResNet이 등장
@@ -345,10 +345,10 @@
    - Forward pass는 처음부터 끝까지 전부 이용
    - 또한 Backpropagaion 과정에서 필요한 Loss도 특정 small number of steps에서만 추출, 이렇게 구한 gradient를 모든 block에 적용 가능 -> 가중치를 공유하기 때문
 3. **RNN tradoffs**
-   **RNN의 장점**
+   - **RNN의 장점**
       - input의 길이가 상관 없음
       - 모든 가중치를 공유하기에 상대적으로 모델의 크기에 비해 메모리 소모량이 적음
-   **RNN의 단점**
+   - **RNN의 단점**
       - Recurrent computation이 매우 느림. 이는 Current hidden state를 구하기 위해선 Prev hidden state가 필요하기 때문
       - hidden state의 값이 시간이 지나면서 다른 input과 많이 섞이기 때문에 이전의 hidden state의 값에 도달하기가 힘듦
 4. **Image Captioning with RNNs**
@@ -448,58 +448,58 @@
 4. **Semantic Segmentation에 대해**
    - Semantic Segmentation의 목표는 각 픽셀별로 우리가 원하는 label를 기준으로 classify하는 것
    - 즉 Semantic Segmentation은 어떤 객체가 어디에 있는지를 알고 싶은 것이 아닌, 특정 pixel이 어느 label에 속하는지 알고 싶어함
-   **Sliding Window**
+   - **Sliding Window**
       - 각 Pixel별로 근처의 맥락을 파악하기 위해서 pixel size보다 더 큰 patch를 CNN에 넣어서 classify
       - pixel 개수 * CNN 만큼의 연산이 필요해서 매우 비효율적이고, pixel 별로 다른 CNN을 실행하기에 features을 공유하지 못해서 발생하는 비효율성의 문제도 존재
-   **Convolution**
+   - **Convolution**
       - pixel size보다 더 큰 patch를 CNN에 넣는 것이 아닌, image 자체를 CNN에 넣는 방법
       - 하지만 CNN architectures는 보통 layer가 깊어질 수록, pool이나 stride를 사용해서 data의 크기를 줄이는 방식을 사용
       - 이 점은 모든 pixel에 class를 할당하는 Semantic Segmentation의 경우엔 기존 이미지의 크기를 output에서 유지해야 하기에 문제가 발생
-   **Fully Convolutional**
+   - **Fully Convolutional**
       - (Without dowmsampling) input: [3 x H x W] -> Convolutions: [D x H x W] -> Scores: [C x H x W] -> Predictions: [H x W]의 형태로 진행
       - 이 방식의 경우 전체 이미지를 downsampling 없이 CNN에 넣기에 CNN의 연산값이 너무 비싸짐
       - (With downsampling and upsampling) input: [3 x H x W] -> High-res: [D1 x H/2 x W/2] -> Med-res: [D2 x H/4 x W/4] -> Low-res: [D3 x H/4 x W/4] -> Med-res -> High-res -> [C x H x W] -> Predictions: [H x W]
       - Loss function의 경우, 모든 pixel에 대해 Softmax를 사용하고 이를 전부 더함 -> 이 loss를 이용해서 backpropagation을 할 수 있음
-   **U-Net**
+   - **U-Net**
       - Fully Convolution with upsampling과 비슷하지만, Downsampling을 하기 전 feature 정보를 이후 upsampling을 할 때, 전달해서 사용
 5. **Upsampling에 대해**
    - Nearest Neighbor: 크기를 키운 후, 해당 크기를 전부 같은 값으로 채움
    - Bed of Nails: 크기를 키운 후, 왼쪽 위에 해당 값을 채우고 나머지 값을 0으로 채움
    - Max Unpooling: Max Polling을 할 때, 어느 pixel에서 값이 max였는 지에 대한 position 정보를 저장한 후, 이를 Unpooling할 때 크기를 키우고 해당 position에 그 정보를 대입, 나머지 값은 0으로 채움
-   **Learnable Upsampling**
+   - **Learnable Upsampling**
       - 초기의 경우엔 Encoding 과정에서 사용된 filter의 가중치를 Convolution Matrix로 바꾼 뒤, 이 값을 Decoder 과정에서 Convolution Matrix의 Transpose를 사용해서 원본의 값을 복구
       - 하지만 이 경우 Convolution Matrix에는 0이 많기에 원본을 복구하는 것에 문제가 발생할 수 있고, 이 점을 해결하기 위해서 이 Weight를 학습시키는 방식으로 발전
 6. **Object Detection에 대해**
    - 기존의 Classification에 해당 class에 해당하는 객체의 Localization 정보도 필요
-   **Single Object**
+   - **Single Object**
       - CNN을 통해 나온 feature 정보를 사용하여 Class Scores와 Box Coordinates에 관한 정보들을 추출하고 각각 Softmax, L2 Loss를 사용하여 손실값을 합쳐서 최종 Loss를 구하는 방식
-   **Multiple Objects**
+   - **Multiple Objects**
       - image를 여러개의 crops로 나눈 후, CNN을 실행해서 해당 crop이 배경인지, 아니면 다른 object인지 판단하는 방식
       - 하지만 무작정 여러개의 crops로 나누는 것은 너무나 많은 CNN 연산을 필요로 하고 이는 computationally expensive
       - Selective Search: object가 있을것 같은 위치를 찾고 그 위치에서만 CNN을 실행
-      **Slow R-CNN**
+      - **Slow R-CNN**
          - object가 있을만한 Regions을 224 x 224의 크기로 조정 후, 이 값을 각각의 CNN에 넣어서 Bbox reg, SVMs을 통해 object의 좌표와 class label 값을 얻음
          - 하지만 이 방식의 경우 마찬가지로 너무나 많은 CNN 연산을 필요로 함
-      **Fast R-CNN**
+      - **Fast R-CNN**
          - 전체 imgae를 CNN에 넣어서 features를 추출 -> 해당 features에서 Object가 있을만한 부분을 CNN을 실행하여 Object category와 Box offset을 구함
          - RoI 부분을 CNN으로 돌린다라는 개념은 Slow R-CNN과 비슷하지만 CNN의 크기와 연산량을 고려하건대 훨씬 좋은 성능을 보여줌
          - Faster R-CNN으로 발전하는 경우, CNN 대신 RPN을 사용, 또한 이렇게 구한 위치정보를 RoI pooling을 통해 Crop하고 이후 Per Region Network를 실행
-   **Region Proposal Network**
-      - Input image를 Image features로 변환 후 이를 20 x 15 크기의 boxes로 나눠서 object일지 아닐지를 판단 후 boxes의 크기를 정함
-      - 이는 Image -> Features -> Objectness, Bbox reg 확인이라는 2개의 단계로 구분 -> 이는 비효율적
-   **Single-Stage Object Detectors**
-      **YOLO**
+      - **Region Proposal Network**
+         - Input image를 Image features로 변환 후 이를 20 x 15 크기의 boxes로 나눠서 object일지 아닐지를 판단 후 boxes의 크기를 정함
+         - 이는 Image -> Features -> Objectness, Bbox reg 확인이라는 2개의 단계로 구분 -> 이는 비효율적
+   - **Single-Stage Object Detectors**
+      - **YOLO**
          - B개의 bounding boxes에서 P(object): box에 object가 있을 확률, P(class): box내의 object가 어떤 class에 속하는지 를 구함
          - You Only Look Once의 줄임말로 real-time object detection임
          - S x S grid로 input을 나누고, 이를 각각 Bouding boxes + confidence와 Class probability map로 나눠서 object detect와 classification을 따로 수행한 후 이를 합쳐서 Final detections를 제작
-      **DETR**
+      - **DETR**
          - 간단한 object detection pipeline, image를 CNN을 사용해서 features를 추출한 후, 이를 transformer encoder-decoder에 넣어서 예측하는 방식
          - 랜덤하게 boxes를 지정해서 그 부분을 확인하는 것이 아닌, transformer가 학습을 통해서 boxes를 알아서 정하는 방식을 채택
          - Transformer는 spatial 정보를 확인할 수 없기에, positional encoding을 이용
          - Encoder에서 얻는 정보들을 decoder의 hidden에 넣고 object queries를 이용하여 나온 output을 FFN을 통해 최종 결과 도출
 7. **Instance Segmentation에 대해**
    - Object Detection을 pixel 단위로 하는 방식
-   **Mask R-CNN**
+   - **Mask R-CNN**
       - Fast R-CNN에서 RoI pooling한 후, Mask Prediction을 추가로 하는 방식
       - 기존에는 c차원의 Classification Scores와 4C차원의 Box coordinates (per class), 어떤 class가 발견될지 모르기에 모든 class의 mask를 C x 28 x 28에 저장
 8. **Visual Viewpoint에 대해**
@@ -557,12 +557,12 @@
    - sampling 과정을 통해 선택된 video frames를 개별적으로 2D CNN에서 분류
    - video의 내용이 크게 변하지 않는 경우에 유리 (Time이 흐르더라도 상대적으로 고정된 이미지에 가깝기 때문에)
 3. **Fusion에 대해**
-   **Late Fusion**
+   - **Late Fusion**
       - (with FC layers) 각각의 image frame을 CNN을 통해서 분류한다는 점에서 Single-Frame CNN과 비슷하지만, 이로 모인 features를 Flatten 시킨 후 MLP를 통해 최종 Class scores를 도출
       - 하지만 이 경우엔, T가 커질수록 feature의 개수가 많아지고 마지막 FC가 복잡해짐에 따라 parameter의 개수가 많아지면서 비효율성이 증가
       - 이 문제를 해결하기 위해 Average Pooling을 사용, (T x D x H' x W')의 형태로 Flatten 시킨 Features를 시공간을 기준으로 Average Pool을 사용하여 D차원으로 만든 후, 간단한 Linear 연산을 통해 결과 도출
       - 하지만 이 경우에도 CNN을 통해 특징을 추출한 후, Average Pool을 사용했기에 각각의 image에 있는 low-level motion을 비교하기가 어려움 (Pool의 정보 손실에 의해)
-   **Early Fusion**
+   - **Early Fusion**
       - Features을 추출하고 Pool을 할 경우 정보의 손실이 발생하니, 이를 해결하기 위해서 정보를 합친 후, 2D CNN을 사용
       - 기존의 Image frames는 (T x 3 x H x W)이기에 2D CNN에 넣기 위해서 (3T x H x W)로 크기 변경
       - 하지만 다양한 정보를 가진 Image frames를 한번에 합쳐서 넣는 것은 충분하지 않음  (시간의 정보가 사라지기에)
