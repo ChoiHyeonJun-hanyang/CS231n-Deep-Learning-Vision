@@ -233,8 +233,8 @@
    - Stride와 마찬가지로 Downsample을 하는 하나의 방법임
    - Hyperparmeters: Kernel Size (=Filter Size), Stride, Pooling function
    - Max Pool 방식의 경우 ReLU와 유사한 점이 존재하고, non-linearity를 도입하기에 꼭 ReLU를 사용해야 하는것은 아님
-   - 하지만 Avg Pool 방식은 linear + linear이기에 명시적인 Activation function이 필요요
- 8. **Translation Equivariance와 CNN**
+   - 하지만 Avg Pool 방식은 linear + linear이기에 명시적인 Activation function이 필요
+8. **Translation Equivariance와 CNN**
    - Conv와 Translate는 순서가 바뀌어도 같은 결과를 도출
    - 이는 Features of images가 위치에 관계없다는 것을 의미
 
