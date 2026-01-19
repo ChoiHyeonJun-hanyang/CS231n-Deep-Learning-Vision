@@ -25,7 +25,7 @@
 - [x] Assignment 3 시작
 
 ### 4주차 (진행중)
-- [ ] 강의 14강 수강
+- [x] 강의 14강 수강
 - [ ] 강의 15강 ~ 18강 수강
 - [ ] Assignment 3 종료
 - [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
@@ -73,6 +73,9 @@
 ### 2026년 1월 18일
 1. GitHub에 강의 10강 정리
 2. Lecture 14: Generative Models 2 수강 시작 (GANs와 Diffusion Models: Intuition까지 진행)
+
+### 2026년 1월 19일
+1. Lecture 14: Generative Models 2 수강
 
 ### Lecture 1: Introduction
 #### 배운 점
