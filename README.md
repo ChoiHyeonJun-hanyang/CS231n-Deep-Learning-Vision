@@ -76,6 +76,7 @@
 
 ### 2026년 1월 19일
 1. Lecture 14: Generative Models 2 수강
+2. Assignment3 - Self-Supervised Learning for Image Classification 시작
 
 ### Lecture 1: Introduction
 #### 배운 점
