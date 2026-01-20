@@ -12,12 +12,10 @@
 ### 1주차 (완료)
 - [x] 강의 1강 ~ 4강 수강
 - [x] Assignment 1 시작 및 완료
-- **핵심 내용**: Image Classification, kNN, Linear Classifiers, Neural Networks
 
 ### 2주차 (완료)
 - [x] 강의 4강 ~ 9강 수강
 - [x] Assignment 2 시작
-- **핵심 내용**: Backpropagation, CNN Architectures, Training Neural Networks
 
 ### 3주차 (완료)
 - [x] 강의 10강 ~ 13강 수강
