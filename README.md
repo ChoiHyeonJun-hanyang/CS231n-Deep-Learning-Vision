@@ -632,7 +632,7 @@
 
 ### Lecture 11: Large Scale Distributed Training
 
-> **Main Keywords:** GPU hardware, Data Parellelism, Context Parallelism, Pipeline Parallelism, Tensor Parallelism
+> **Main Keywords:** GPU hardware, Large Scale Distributed Training, Data Parallelism, FSDP, HSDP, Activation Checkpointing, MFU, Context Parallelism, Pipeline Parallelism, Tensor Parallelism
 
 #### 배운 점
 
@@ -650,6 +650,59 @@
 3. **Data Parallelism에 대해**
    - 기존의 방식은 Loss를 하나의 GPU가 N개의 samples에 대해서 계산한 후, 평균 값을 사용하는 방식으로 진행
    - DP의 아이디어는 MN개의 samples에 대해서 M개의 GPU가 각각 MN개의 samples 중에서 N개의 samples에 대한 loss의 평균을 구한 후, 이 M개의 loss를 다시 또 평균을 내는 방식
+   - Gradient가 Linear하기에, 즉 loss의 gradient를 서로 분리해서 구할 수 있기에 가능한 방식
+   - 우리의 목표는 여러 개의 GPUs를 이용해서 하나의 큰 GPU가 동작하는 것처럼 구현하는 것이고, 이를 위해서 forward -> backward 이후 각 GPU마다의 gradient를 평균을 내서 update해야 함
+   - 이 과정에서 backward pass 한번을 수행하기 위해 모든 GPU 사이의 정보 통신이 필요하고, 이는 다른 연산과정에 비해 비싼 통신을 필요로 함으로 bottleneck이 됨
+   - 이를 해결하기 위해 backward를 하면서 동시에 통신하여 통신과정에서 사용되는 시간의 손실을 줄임
+   - 하지만 이 방식의 경우 모든 GPU가 weight, grad, Adam b1, b2와 같은 정보들을 전부 가지고 있어야 함 -> 이는 굉장한 메모리 손실
+   - **Fully Sharded Data Parallelism (FSDP)**
+      - GPU마다 자신만의 고유한 가중치를 지니고 이를 다른 GPU에게 공유하는 방식 (ex. W1 ~ W3까진 GPU1, W4 ~ W6까진 GPU2와 같은 방식)
+      - forward pass나 backward pass에서 자신에겐 없는 가중치가 필요할 때, 그 가중치를 가진 GPU에게 받는 방식 (forward에서의 마지막 가중치는 backward에서의 처음 가중치이기에 삭제 x)
+      - 마찬가지로 통신에 발생하는 시간의 효율성을 높이기 위해 가중치를 가져오는 것, backward pass, aggregate gradient를 동시에 진행
+      - 예를 들어 W3에 대한 gradients를 보내고 update, backward with W2, Fetch W1을 전부 동시에 진행
+      - 이 아이디어의 경우, DP에 비해 메모리 효율성에서 좋지만 통신 과정이 많아지면서 속도가 느려짐
+   - **Hybrid Sharded Data Parallel (HSDP)**
+      - GPUs를 Group으로 나눠서 그 Group 내에서 FSDP를 진행
+      - 이 방식으로 할 경우, 상대적으로 Cluster에 비해 통신 속도가 빠른 Rack이나 Pod 내에서 Forward pass의 Weight 공유, Backward pass의 Weight 공유, Gradients 공유 총 3번의 통신이 필요. 상대적으로 통신 속도가 느린 Cluster 내에서는 Gradients 공유 총 1번의 통신이 필요 -> 통신이 빠른 곳에서의 통신을 많이, 통신이 느린 곳에서의 통신은 적게
+      - FSDP나 HSDP를 통해서 기존 DP에서 800GB의 메모리가 필요했다면 80개의 GPU를 사용하였을 때, GPU당 10GB의 메모리만 사용
+      - 하지만 backward pass를 위해서 기존에 구해놓은 activations를 저장하는 과정에서 메모리 문제가 발생
+4. **Activation Checkpointing에 대해**
+   - 기존의 방식대로 모든 값을 다 저장하는 경우, Forward + Backward에는 O(N)의 연산과 메모리가 필요
+   - Full Recomputation: n + (n-1) + (n-2) + ... + 1 = O(N^2)의 연산이 필요, 메모리는 O(1) -> O(N^2)의 연산은 너무나도 많음
+   - C개의 checkpoints를 도입, 이 경우 O(N^2/C)의 연산과 O(N/C)의 메모리가 필요 -> C로 sqrt(N)을 주로 사용: (Computation: O(N*sqrt(N)), Memory: O(sqrt(N)))
+5. **많은 양의 GPUs를 학습시키는 방법**
+   - 효율성을 위해 개별 GPU의 메모리를 최대한 사용 
+   - DP 사용 (GPUs < 128, parameters < 1B), FSDP + activation checkpointing (parameters > 1B), HSDP + activation checkpointing (GPUs > 256)
+   - 만약 GPUs > 1K, params > 50B라면, CP, PP, TP와 같은 다른 방식을 사용
+   - global batch size, local batch size, HSDP Dimension과 같은 다양한 Parameter를 세팅해야 함 -> Maximize Model Flops Utilization (MFU)
+6. **HFU와 MFU**
+   - **HFU**
+      - 현재 사용하는 GPU가 어느 상황에서 최적의 성능을 보이는 지를 확인 후, 이 값을 이용
+      - 하지만 HFU는 학습하는 Model에 따라 달리질 수 있는 Data augmentation, Optimizer, Preprocessing의 부분을 담지 못함 -> MFU를 Maximize
+   - **MFU**
+      - 이론상 Model에서 사용되는 FLOP_theoretical을 구한 후, 사용하는 Hardware의 이론상 최고 성능으로 나눠 이론상 걸려야하는 시간을 계산
+      - 구한 값을 t_theoretical이라 할 때, 이를 실제로 걸린 시간 (t_actual)로 나눠서 MFU를 구함
+      - MFU가 30% 이상이면 좋은 값이고, 40% 이상이면 굉장히 좋은 값임
+      - Recent Devices로 할 경우, FLOPs 연산의 속도 증가보다 통신 속도의 증가가 적기에 MFU의 값이 낮아질 수 있음
+7. **Context Parallelism에 대해**
+   - Transformers는 L-length의 sequence을 받기에, 여러개의 GPUs가 single long sequence를 나눠서 처리하게끔 함
+   - Normalization, residual connections에선 가중치를 공유할 필요도 없고, parallelizable하기에 매우 쉬움
+   - MLP: 병렬화하기 쉽지만, 가중치를 가지기에 가중치를 복사하고 gradients를 공유하는 과정이 추가로 필요
+   - **Attention**
+      - QKV Projection: MLP와 같이 gradients를 공유할 필요가 있음
+      - Attention operator: 병렬화시키기 어렵기에 Ring Attention, Ulysses를 사용
+      - Ring Attention: Ring의 형태로 GPUs를 배치한 후, K, V를 옆으로 계속 공유하는 방식으로 Attention Scores를 구함 (총 GPU의 개수만큼 실행) -> 메모리를 효율적으로 사용하고, 문장 길이 대처능력도 좋지만 구현이 어려움
+      - Ulysses: 기존의 방식은 Data: (Sequences, Heads)로 나누어서 전문가 그룹인 Heads를 통해 Sequences를 분석했다면, Sequences를 모든 GPU끼리 공유시키고 Heads를 나눠서 Multihead Attetion을 실행 -> GPU마다 특정 Heads에 집중해서 관찰하기에 max parallelism = # of heads
+8. **Pipeline Parallelism에 대해**
+   - Model이 여러개의 Layer로 구성되어 있다면, Layer 별로 담당하는 GPU를 달리 하는 방식
+   - 하지만 이 방식의 경우, GPU1의 작업이 끝나야 GPU2의 작업이 들어갈 수 있는 Sequential dependencies가 존재 -> Max MFU with N-way PP = 1/N 이고 이는 N이 커질 수록 안 좋아짐
+   - 따라서 microbatches를 많이 늘린 후, 각각의 batch를 순서대로 실행하여 bubble의 크기를 최소화하는 방식으로 진행
+   - 하지만 microbatch의 개수를 늘릴 수록, backward를 하지 못하는 경우 메모리 부족 문제가 발생할 수 있기에 Activation checkpointing을 도입
+9. **Tensor Parallelism에 대해**
+   - Tensor multiply XW = Y에서 W를 열에 따라서 W_i로 나눈 후, 이 값들이 열에 따라서 나뉜 Y_i를 만드는 점을 이용하여 각각의 GPU가 W_i를 통해 Y_i를 구함
+   - 하지만 이 방식은 만약 다음 연산이나 action이 Y를 열기준이 아닌 행 기준으로 고려해야 하는 연산이라면 모든 GPU가 연산할 때까지 기다려야 함.
+   - 2 consecutive TP layers를 사용, X: [NxD], W: [DxD], Y: [NxD], U[DxD], Z[NxD] 일 때, (GPU1을 기준, 총 GPU 4개) W1: [D x D/4]를 통해 Y1: [N x D/4]를 만들고 U1: [D/4 x D]와 연산하며 GPU1에서의 연산을 진행
+   - TP, CP, PP, and DP를 전부 동시에 사용하여 ND Parallelism을 실행 할 수 있음  
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -663,6 +716,10 @@
 > - Scaling Laws 활용: 상대적으로 작은 규모의 모델을 사용하여 최적의 Hyperparameter을 찾고, 모델의 크기가 커질 때, 최적의 Hyperparameter가 어떻게 변하는지 보여주는 수식을 사용하여 해결.
 > - 검증된 스케줄러 활용: 최적의 값을 하나만 정하는 것이 아닌, 학습 진행 상황에 따라 변하는 스케줄러를 사용. (ex. Linear Warmup + Cosine Delay (Lecture 3에서 배움))
 > - 학습 중 수술: 학습 도중에 Loss가 커지거나 줄어들지 않는다면, 학습을 중단한 후 예전에 저장해뒀던 시점으로 돌아가 Hyperparameter의 값을 수정 후 다시 실행.
+
+##### 3. CP에서의 Normalization
+**Q.** CP는 하나의 Sequence를 여러 개로 나눠서 각각을 GPU가 맡는 방식으로 한다고 하는데, 그렇다면 Layer Normalization에서의 정보 공유가 왜 필요 없는 지에 대한 의문
+> **A.** LayerNorm은 하나의 sample에 대해서 그 내부의 값들을 Normalize 하는 방식이고, 여기에서의 Layer Normalization은 Sequence를 Normalization하는 것이 아닌 Sequence token이 지닌 값을 Embedding을 통해서 (N, D) -> (N, D, E)로 만들고 E에 대해서 Normalization을 하는 것이기에 D를 기준으로 나누는 CP의 경우 문제가 발생하지 않음
 
 ---
 
