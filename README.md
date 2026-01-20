@@ -30,7 +30,7 @@
 
 ---
 
-## Daily Log & TIL
+## Daily Log
 
 ### 2025년 12월 24일 ~ 2026년 1월 8일
 1. Lecture 1~9 수강
@@ -75,6 +75,9 @@
 ### 2026년 1월 19일
 1. Lecture 14: Generative Models 2 수강
 2. Assignment3 - Self-Supervised Learning for Image Classification 시작
+
+### 2026년 1월 20일
+1. Assignment3 - Self-Supervised Learning for Image Classification 종료
 
 ### Lecture 1: Introduction
 #### 배운 점
