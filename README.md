@@ -78,6 +78,7 @@
 
 ### 2026년 1월 20일
 1. Assignment3 - Self-Supervised Learning for Image Classification 종료
+2. GitHub에 강의 11강 정리
 
 ---
 
@@ -631,18 +632,37 @@
 
 ### Lecture 11: Large Scale Distributed Training
 
-> **Main Keywords:** 
+> **Main Keywords:** GPU hardware, Data Parellelism, Context Parallelism, Pipeline Parallelism, Tensor Parallelism
 
 #### 배운 점
 
-1. 
-   -
+1. **GPU Hardware에 대해**
+   - Graphics Processing Unit의 줄임말로, 처음엔 graphic의 연산을 위해서 고안된 장치. 최근엔 다양한 parallel processing에서 사용
+   - parallel processing이란 큰 작업을 아주 작은 단위로 쪼개서 수천개의 코어가 연산을 동시에 처리하는 방식으로 시간을 획기적으로 단축
+   - (NVIDIA H100 기준) 사용 가능한 132개의 SMs가 존재, 이는 각각 independent parallel core임
+   - 각각의 SM에는 128개의 FP32 Cores가 있고 각각 a*x + b의 연산 (multiply + add)의 연산을 실행하기에 128 * 2 = 256 FLOP/cycle의 성능을 가짐
+   - 또한 4 Tensor Cores는 AX + B (A, X, B: Tensor)을 clock cycle마다 실행하기에, [16 x 4][4 x 8] + [16 x 8] = 16 * 4 * 8 * 2 = 1024 -> 1024 * 4 = 4096 FLOP/cycle의 성능을 가짐
+   - 기술이 발전하면서, FP32의 처리 속도 증가보다, Tensor Cores의 처리 속도가 기하급수적으로 빨라짐
+2. **Using Multiple GPUs에 대해**
+   - (H100 기준) GPU 내의 통신은 3352 GB/sec
+   - (Llama3 Cluster 기준) Server: 8개의 GPU를 뭉쳐놓은 것, 900 GB/sec between GPUs -> Rack: 2개의 Server를 뭉쳐놓은 것, 총 GPU 16개 -> Pod: 192 Racks, 3072 GPUs, 50GB / sec between GPUs -> Cluster: 8 Pods, 24,576 GPUs, < 50GB / sec between GPUs
+   - 우리의 목표는 이 큰 Cluster를 하나의 큰 Computer로 생각하고 이를 통해서 규모가 큰 Neural Network를 학습시키는 것
+3. **Data Parallelism에 대해**
+   - 기존의 방식은 Loss를 하나의 GPU가 N개의 samples에 대해서 계산한 후, 평균 값을 사용하는 방식으로 진행
+   - DP의 아이디어는 MN개의 samples에 대해서 M개의 GPU가 각각 MN개의 samples 중에서 N개의 samples에 대한 loss의 평균을 구한 후, 이 M개의 loss를 다시 또 평균을 내는 방식
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Cluster에서의 tradeoff
+**Q.** Cluster과 같이 GPU의 개수를 많게 할수록, GPU간의 연산 속도는 감소하는데 저런 큰 규모는 속도를 조금 포기한 대신 총 연산량을 더 늘리려는 목적인지에 대한 의문
+> **A.** 통신의 부분은 인공지능 모델의 부분 중 큰 부분을 차지하지 않는 경우가 많고, 대부분은 연산에 소모되는 시간. 따라서 통신 속도를 포기하면서 총 연산량을 얻는 것은 현명한 선택임. 또한 큰 규모의 Cluster는 상대적으로 GPUs 간의 통신 속도는 느려지지만, 통신 과정에서 연산을 동시에 진행하거나, 혹은 batch size를 최대화시켜서 통신 대비 연산의 비율을 높게 가져가는 방식들을 통해서 이를 해결.
+
+##### 2. Cluster에서의 학습
+**Q.** 이렇게 큰 Cluster를 사용해서 학습시키는 경우, 길게보면 몇달간 학습시킨다고 교수님이 말하셨는데, 그렇다면 learning_rate 같은 Hyperparameter를 어떻게 최적의 값을 찾고 진행하는 지에 대한 의문
+> **A.**
+> - Scaling Laws 활용: 상대적으로 작은 규모의 모델을 사용하여 최적의 Hyperparameter을 찾고, 모델의 크기가 커질 때, 최적의 Hyperparameter가 어떻게 변하는지 보여주는 수식을 사용하여 해결.
+> - 검증된 스케줄러 활용: 최적의 값을 하나만 정하는 것이 아닌, 학습 진행 상황에 따라 변하는 스케줄러를 사용. (ex. Linear Warmup + Cosine Delay (Lecture 3에서 배움))
+> - 학습 중 수술: 학습 도중에 Loss가 커지거나 줄어들지 않는다면, 학습을 중단한 후 예전에 저장해뒀던 시점으로 돌아가 Hyperparameter의 값을 수정 후 다시 실행.
 
 ---
 
