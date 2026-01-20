@@ -79,6 +79,7 @@
 ### 2026년 1월 20일
 1. Assignment3 - Self-Supervised Learning for Image Classification 종료
 2. GitHub에 강의 11강 정리
+3. Lecture 15: 3D Vision 수강 시작
 
 ---
 
