@@ -657,7 +657,7 @@
    - 하지만 이 방식의 경우 모든 GPU가 weight, grad, Adam b1, b2와 같은 정보들을 전부 가지고 있어야 함 -> 이는 굉장한 메모리 손실
    - **Fully Sharded Data Parallelism (FSDP)**
       - GPU마다 자신만의 고유한 가중치를 지니고 이를 다른 GPU에게 공유하는 방식 (ex. W1 ~ W3까진 GPU1, W4 ~ W6까진 GPU2와 같은 방식)
-      - forward pass나 backward pass에서 자신에겐 없는 가중치가 필요할 때, 그 가중치를 가진 GPU에게 받는 방식 (forward에서의 마지막 가중치는 backward에서의 처음 가중치이기에 삭제 x)
+      - forward pass나 backward pass에서 자신에겐 없는 가중치가 필요할 때, 그 가중치를 가진 GPU에게 받는 방식 (forward에서의 마지막 가중치는 backward에서의 처음 가중치이기에 삭제 x, 나머지 가중치는 삭제)
       - 마찬가지로 통신에 발생하는 시간의 효율성을 높이기 위해 가중치를 가져오는 것, backward pass, aggregate gradient를 동시에 진행
       - 예를 들어 W3에 대한 gradients를 보내고 update, backward with W2, Fetch W1을 전부 동시에 진행
       - 이 아이디어의 경우, DP에 비해 메모리 효율성에서 좋지만 통신 과정이 많아지면서 속도가 느려짐
@@ -702,7 +702,8 @@
    - Tensor multiply XW = Y에서 W를 열에 따라서 W_i로 나눈 후, 이 값들이 열에 따라서 나뉜 Y_i를 만드는 점을 이용하여 각각의 GPU가 W_i를 통해 Y_i를 구함
    - 하지만 이 방식은 만약 다음 연산이나 action이 Y를 열기준이 아닌 행 기준으로 고려해야 하는 연산이라면 모든 GPU가 연산할 때까지 기다려야 함.
    - 2 consecutive TP layers를 사용, X: [NxD], W: [DxD], Y: [NxD], U[DxD], Z[NxD] 일 때, (GPU1을 기준, 총 GPU 4개) W1: [D x D/4]를 통해 Y1: [N x D/4]를 만들고 U1: [D/4 x D]와 연산하며 GPU1에서의 연산을 진행
-   - TP, CP, PP, and DP를 전부 동시에 사용하여 ND Parallelism을 실행 할 수 있음  
+   - 하지만 TP의 경우 Row Parallelism을 한 후 (이 상황에선 U1 이후), All-reduce를 필요로 하기 때문에 통신 속도가 빠른 GPUs끼리 사
+   - TP, CP, PP, and DP를 전부 동시에 사용하여 ND Parallelism을 실행 할 수 있음
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
