@@ -79,6 +79,8 @@
 ### 2026년 1월 20일
 1. Assignment3 - Self-Supervised Learning for Image Classification 종료
 
+---
+
 ### Lecture 1: Introduction
 #### 배운 점
 1. **이 강의를 통해 배우고자 하는 것**
