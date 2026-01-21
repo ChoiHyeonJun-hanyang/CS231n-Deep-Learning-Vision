@@ -4,8 +4,8 @@
 
 ## 프로젝트 개요
 - **수강 기간**: 2025년 12월 24일 ~ (진행 중)
-- **목표 일정**: 5주 완성 (수강 4주 + 프로젝트 1주)
-- **현재 상태**: 4주차 진행 중
+- **목표 일정**: 6주 완성 (수강 5주 + 프로젝트 1주)
+- **현재 상태**: 5주차 진행 중
 
 ## 주차별 진행 상황 (Roadmap)
 
@@ -22,9 +22,12 @@
 - [x] Assignment 2 종료
 - [x] Assignment 3 시작
 
-### 4주차 (진행중)
-- [x] 강의 14강 수강
-- [ ] 강의 15강 ~ 18강 수강
+### 4주차 (완료)
+- [x] 강의 14 ~ 15강 수강
+- [x] Assignment 3 - Self-Supervised Learning for Image Classification까지
+
+### 5주차 (진행중)
+- [ ] 강의 16강 ~ 18강 수강
 - [ ] Assignment 3 종료
 - [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
 
@@ -83,6 +86,7 @@
 
 ### 2026년 1월 21일
 1. Lecture 15: 3D Vision 수강
+2. GitHub에 강의 12강 정리
 
 ---
 
@@ -730,18 +734,95 @@
 
 ### Lecture 12: Self-supervised Learning
 
-> **Main Keywords:** 
+> **Main Keywords:** Self-Supervised Learning, Pretext Tasks, Masked Auto Encoders, Contrastive representational learning, Momentum Contrastive Learning, Contrastive Predictive Coding, DINO
 
 #### 배운 점
 
-1. 
-   -
+1. **Self-Supervised Learning에 대해**
+   - 기존의 large-scale training 방식의 경우 Label이 붙어있는 데이터를 통해서 학습하기에 많은 양의 labeled data가 필요
+   - 이를 해결하기 위해서 data (no labels) 자체를 이용해서 Pretext Task를 진행하여 Encoder를 학습시키고 학습시킨 Encoder를 data (with labels) 를 이용하여 Classify하는 방식의 Self-Supervised Learning을 생각
+   - Downstream Task에선 Encoder가 이미 학습되어 있기에, 상대적으로 dataset (no labels)에 비해 적은 양의 dataset (with label)으로 해결 가능
+   - Pretext Task에선 Encoder를 통해 Learned Representation을 추출하고 이를 활용하여 자신들만의 Tasks를 Decoder (or Classifier, Regressor)를 사용해서 해결하는 방식으로 학습
+   - Downstream Task에선 Encoder를 가져와 Learned Representation을 추출하고 이를 shallow network를 활용하여 Classification하는 방식
+   - Self-supervised learning을 확인하는 방법은 Encoder로 추출한 특징을 통해서 Downstream tasks나 혹은 classification을 얼마나 잘 수행하는 지를 확인
+2. **Self-supervised pretext tasks에 대해**
+   - Pretext tasks를 통해 학습한 모델은 훌륭한 features를 추출할 수 있음, 또한 Pretext tasks에선 우리가 원하는 대로 data에 label을 생성하는 것이 가능 (Visual common sense를 발견하는 것에 초점)
+   - Predict rotations: model이 주어진 data가 얼마나 회전했는지를 알려면, 해당 object가 어떤 시각적 특징을 가져야 하는 지를 알아야만 알 수 있다는 가정을 통해서 학습 -> 예를 들어서 0, 90, 180, 270과 같은 4개의 경우만을 고려한다고 한다면, 한 개의 raw data를 4개의 rotated data로 변경한 뒤, 이를 각각 ConvNet을 사용하여 각각의 image가 얼마나 회전된 이미지인지를 도출하는 방식 (이 경우 4-way classification)
+   - Predict relative patch locations: 특정 이미지 부분을 9개의 조각으로 나눈 후, 중앙의 조각만을 주고 특정 조각이 이 조각 기준 어디에 존재해야 할지를 맞춰야 하는 방식 (이 경우 8-way classification)
+   - Solving jigsaw puzzles: 앞선 방식과 마찬가지로 특정 이미지 부분을 9개 조각으로 나누지만, 이 경우엔 이 조각들로 하여금 각각의 이미지가 어디 조각에 들어가야 하는지를 맞추는 방식
+      - 만약 이 경우를 classification으로 해결하려고 한다면 총 경우의 수가 9!이 나오고 이를 실행 시, 제대로 된 학습이 어렵기 때문에 가능한 9!의 경우의 수 중에서 가장 다른 모양새로 생기게끔 배치된 64개의 경우의 수 중 하나를 맞추는 방식으로 바꿈 (이는 학습에서의 효율성과 메모리에서의 효율성을 증가, 이 경우 64-way classification)
+   - Predict missing pixels: Encoder를 통해 image의 features를 얻은 후, 이 Features를 Channel-wise Fully Connected를 통해서 Decoder Features로 바꾼 후 이를 Decoder에 넣어서 복원한 이미지를 원본 이미지랑 비교하는 방식
+      - 위의 Tasks에서의 Loss는 다음과 같이 정의, Loss = L_reconstruction + L_adversarial_learning, L_recon = ||M * (x - Encoder((1 - M) * x))||^2 => Masked 안된 부분을 Encoder를 통해 특징을 추출하고 복원한 값과 원본에서 삭제된 부분을 비교, L_adv는 GANs에서 설명
+   - Image coloring: Grayscale image (L channel)을 통해서 Color information (ab channels)를 예측하고 Grayscale과 Color inform을 섞어서 (L, ab) channels의 이미지로 복원 후 raw data와 비교
+      - Split-brain Autoencoder: L, ab의 예시처럼 channels끼리 나눠서 자기가 가지지 못한 정보를 예측하고 예측한 각각의 정보를 합쳐서 원본 이미지와 비교하는 방식 (cross-channel predictions)
+   - Video coloring: Image coloring과 달리, Video의 경우엔 처음에 Color 정보가 있는 사진을 주고, 약간의 시간이 지난 뒤의 사진에서 물체의 움직임을 추적해서 색을 예측하는 방식 (Tracking regions or objects without labels)
+      - 이 방식의 목적은 물체를 분류하는 것이 아닌 특정 물체 (or pixels)의 위치가 얼마나 이동했는지를 확인하는 것, Reference Frame과 Input Frame을 비교하여 물체가 얼마나 이동했는지를 확인하고 이동한 위치의 색 정보를 Reference Colors에서 가져와서 칠하는 방식
+      - 여기서 이전 image와 현재의 image를 비교하고 이전 image의 color information을 가져오는 것은 Attention과 비슷 (Reference Frame을 Key, Reference Colors를 Value로 놓고, Target Frame을 Query로 놓는다면 Cross-Attention과같은 개념)
+   - 하지만 이런 방식으로 훈련된 Encoder의 경우, Pretext tasks를 해결하는 Representation만을 찾게끔 되기에 정작 Downstream tasks에서 좋은 정확도를 못 보여주는 경우 존재 -> Contrastive representation의 배경
+3. **Masked Auto Encoders (MAE)에 대해**
+   - ViT와 비슷하게, Image를 같은 크기의 patch로 나눈 후 50, 75와 같은 확률로 Masked한 뒤 이를 복원하는 것
+   - 높은 Masking 비율을 사용하는 것은 모델로 하여금 복원하는 것을 더욱 어렵게 만들고, 학습이 어렵다는 것은 모델이 더욱 의미있는 결과를 낼 가능성이 크다는 의미
+   - **MAE Encoder**
+      - 오직 ummasked patches만 사용, 이 patches에 대해서 Linear projection을 통해 Embedding한 후, Positional embeddings을 추가 (Transformer blocks를 사용하고, 이 block은 시공간의 정보를 고려하지 않기에)
+      - input patches가 input에 비해 작은 부분만 사용하기에 Encoder를 Decoder에 비해 아주 깊게 만들어서 작은 정보 내에서도 핵심 정보들을 추출
+   - **MAE Decoder**
+      - MAE Encoder를 통해 나온 Features tokens와 Masked tokens (positional encodings 추가)를 합친 후, 이를 input으로 사용 (원래 이미지 크기만큼의 입력으로 만듦)
+      - Encoder에 비해 Input의 크기가 크기 때문에 Encoder의 크기에 비해 Decoder의 크기가 작게 설정 (Asymmetrical design)
+      - 또한 Decoder는 단순히 복원할 때 사용하기에 post-training에서는 사용하지 않음, 또한 U-Net과 달리 Skip Connection이 존재하지 않기에 Encoder와 무관하게 설정할 수 있음
+   - MSE loss가 사용되고, 오직 masked된 (복원한) patches에서만 사용 -> unmasked된 부분이 약간 달라지는 것은 상관없기에
+4. **Linear Probing vs Full Fine-tuning**
+   - Linear Probing: Encoder의 가중치는 고정해두고, 고정된 Learned Representation에 대해서 Downstream tasks를 위한 Linear layer만을 학습시키는 방법
+      - 이 방법을 사용할 시에는 제한된 조건 하에서 pre-training의 representation 퀄리티를 확인할 수 있음
+   - fine-tuning: 상대적으로 많은 양의 데이터 (unlabeled)를 사용해서 학습한 Encoder를 통해서 Downstream tasks를 할 때, 약간의 데이터 (labeled)를 사용해서 Encoder와 Linear (or FC)를 동시에 학습
+      - 이 방법을 사용해서 새로운 tasks에서의 최대 성능을 확인할 수 있음
+5. **Contrastive representation learning에 대해**
+   - Reference sample을 통해서 만들어진 sample을 positive sample이라고 하고 다른 reference sample에 의해 생성된 sample을 negative sample이라고 함
+   - 기존의 문제인 Downstream tasks의 정확도가 낮은 걸 해결하기 위해서, positive sample과의 비교값은 높게, negative sample과의 비교값은 낮게 하여 해당 이미지의 객체의 특징을 보다 자세하게 파악하게끔 유도
+   - InfoNCE loss: L = -Ex[log(exp(s(f(x)), s(f(x+))) / (exp(s(f(x)), s(f(x+))) + 나머지 N-1개의 negative sample과의 exp(scores)))] -> log 내부의 값은 positive pair에 대한 scores를 나머지 scores와 softmax 돌린 것과 같은 결과, 만약 log 내부의 값이 높아진다면 positive와의 연관성이 높고, negative와의 연관성이 낮은 것이기에 우리가 원하는 목표를 달성할 수 있음 (-Ex[]는 손실함수이기에, Cross entropy loss와 비슷)
+   - MI[f(x), f(x+)] - log(N) >= -L -> MI[f(x), f(x+)] >= log(N) - L 로 바꿀 수 있고 이 값을 잘 생각해보면, L은 우리가 최소화하려는 값이고 만약 N이 커진다면 log(N) - L의 값 또한 커지기 때문에 MI도 증가함 (MI는 상호의존성을 의미)
+   - **SimCLR**
+      - raw data x에 대해 data augmentation을 통해 positive pair인 x_i, x_j -> 이를 f(encoder)를 통해 Learned Representation인 h_i, h_j -> 이를 g(projection head)를 통해 z_i, z_j (scores, 주로 Cosine similarity)로 만들고 이를 Contrastive loss에 사용
+      - data augmentation의 경우 random cropping, random color distortion, and random blur를 사용
+      - Affinity matrix를 사용하여 2N개의 samples에 대해서 서로의 similarities를 기록 -> 이후 positive pair를 찾을 때 사용
+      - 학습 이후 우리는 각각의 sample에서 특징을 추출할 수 있는 f를 사용하여 downstream tasks를 수행
+      - 하지만 InfoNCE loss의 특징인 N이 커져야 positive pair의 연관성이 높아진다는 점에 의해 N을 높이다가 메모리 부족 문제가 발생할 수 있음 -> 이를 위해 MoCo를 사용할 수도 있음
+   - **Momentum Contrastive Learning (MoCo)**
+      - query와 key data를 나눠서 구분, query에는 positive pair만 저장, key data는 **queue**에 저장 -> query의 정보는 gradient를 구한 후, backward pass를 통해 update, 하지만 key의 정보는 gradient를 구하지 않음
+      - 하지만 이런 방식으로 할 시, key의 정보가 변하지 않기에 key = key * momentum + query * (1 - momentum)의 방식으로 slowly progressing
+      - query data의 경우는 backpropagation을 해야하기에 중간의 activations를 저장해야 하지만, key data는 이 정보가 필요 없기에 상대적으로 query에 비해 양이 많은 key의 activations를 저장할 필요가 없어서 메모리 부족 문제 완화 (key data는 최종적인 feature vector)
+      - MoCo V2: SimCLR와 MoCo의 아이디어를 섞은 버전, non-linear projection head, strong data augmentation을 SimCLR으로부터 가져오고, momentum-updated queues를 MoCo에서 가져오는 방식을 채택 (서로의 장점을 섞은 버전)
+         - Non-linear projection head와 strong data augmentation을 사용해서 꼼수를 막고, 데이터의 좋은 특징들을 추출하도록 함
+   - **Contrastive Predictive Coding (CPC)**
+      - 앞에서 나온 SimCLR, MoCo가 특정 data sample에 대해서 contrastive learning을 하였다면, CPC는 Sequence-level에서 contrastive learning을 하는 방법
+      - 순서가 존재하는 이미지를 input으로 넣은 후, g_enc를 통해 features를 추출 -> 이 특징들을 RNN과 같은 모델을 사용하여 특정 구간 t까지의 특징들에 대한 요약본을 형성 -> 이를 통해서 이 다음 input들의 features를 예측하는 방법
+      - scores(z_(t+k), c_t) = z_(t+k)T(W_k * c_t), 여기서의 W_k는 c_t와 곱해져서 우리가 예상하는 features를 생성하고 이를 원본 features와 비교 (W_k는 trainable matrix)
+      - Visual context의 경우, 특히 image는 시간적 정보가 존재하지 않기에, image를 약간씩 겹치는 patches로 나눈 후, 이를 CPC에 넣어서 이후의 patches의 값을 예측하는 방식으로 사용
+   - **DINO: Self-Distillation with No Labels**
+      - 기본적으로 x를 통해서 만든 x1, x2를 각각 student와 teacher에게 보냄
+      - Distillation의 개념처럼, student는 teacher를 보고 학습하는 형태 -> student와 teacher는 랜덤한 가중치로 초기화 -> teacher는 student보다 조금 더 차분하고 안정적인 값을 제공, 이를 통해 student가 학습 -> 이 과정에서 backpropagation을 통해 student가 변한다면 그 변한 값을 teacher는 momentum update를 통해 조금씩 변화시키며, student의 평균적인 값을 표현
+      - loss: -p2logp1, p1은 학생의 것, p2는 선생의 것 
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Self-supervised model의 강력함
+**Q.** Self-supervised model이 supervised model에 비해 상대적으로 더욱 강력한 feature representation이 가능하다고 하는데 이 말에 대한 의문
+> **A.**
+> - Self-supervised model의 경우, Pretext tasks를 정확하게 수행하려면 해당 object의 구조와 맥락을 이해해야 하고 이는 Image에서 어떤 부분이 중요한 부분인지를 알아야 할 필요가 Model에게 존재, 이러한 강점은 단순히 classification의 정확도를 높일 뿐만 아니라 Detection, Segmetation과 같은 분야에서도 좋은 성능을 보여줄 가능성이 높음
+> - 하지만 Supervised model의 경우, 고양이를 분류하고자 할 때, 고양이의 특징들을 확인하지 않고 단순히 털만 보고 고양이라고 추측하여 만약 이 추측이 label과 일치할 경우 더 이상 그 부분에 대해서 학습하지 않는 문제가 발생 (Shorcut Learning) 
+
+##### 2. Channel-wise Fully Connected의 사용 이유
+**Q.** Predict missing pixels에서 Encoder에서 추출한 특징들을 바로 Decoder로 사용하는 것이 아닌 Channel-wise Fully Connected를 사용해서 넘기는 이유에 대한 의문
+> **A.**
+> - Encoder를 CNN으로 구성한다고 가정한다면, 원본 데이터에서 사라진 범위가 크기에 저 범위보다 크게 인식하기 위해선 많은 양의 layer가 필요, 하지만 이는 굉장히 비효율적이기에 우리는 추출된 특징들의 Receptive Field가 제한적이어서 전체 문맥을 파악하기 힘들고 이로 인해 Pixel간의 정보를 공유해야만 이미지를 이해할 수 있음
+> - 하지만 모든 특징들에 대해서 비교를 하려고 한다면 Features의 채널이 128개일 때, 총 128 * 128번의 채널간의 연결이 발생하고 이는 굉장한 연산의 크기 문제를 발생 -> 이를 해결하기 위해 Channel-wise Fully Connected를 도입하 기존엔 O(C^2)이었던 연산의 수가 O(C)로 줄어드는 효과를 제공, 또한 각 채널의 이미지 특징들을 서로 비교하였기에 우리가 원하던 정보의 공유 또한 달성
+
+##### 3. SimCLR에서의 g의 의미
+**Q.** SimCLR에서 g가 projection head라고 하는데 Decoder가 아닌 이유와 굳이 f와 g의 과정을 나눠서 해결하는 이유
+> **A.** Downstream tasks에서 원하는 Encoder는 이미지에 대해서 좋은 특징들을 추출할 수 있는 Encoder인데, 만약 우리가 f와 g를 구분하지 않고 하나의 모델로 구현한다면, sample x_i, x_j가 흑백사진과 같이 색 정보가 사라진 images일 때, contrastive loss를 구하려는 과정에서 색 정보와 같은 Downstream tasks에서는 중요할 수 있는 정보를 제거하여 불변성만을 학습하려고 할 수 있음. 이 한계를 극복하기 위해서 최대한 좋은 특징을 뽑는 f를 사용한 후, contrastive loss를 구하는 데 필요한 정보만 남기고 나머지를 버리는 g라는 함수를 training 과정에서만 사용하여 학습 후에 post-training에서 사용하지 않음
+
+##### 4. MoCo에서의 Queue의 의미
+**Q.** MoCo에서 key data를 저장할 때, Queue를 사용하는데 만약 정보를 저장하는 것이면 Stack을 사용해도 되는 것인지에 대한 의문
+> **A.** Key data는 Backpropagation을 실행하지 않기에 변화가 오직 momentum에 의해서 결정됨. 이 방식은 slowly progressing으로 query가 변하는 방향으로 따라가긴 하지만, 결국 시간이 지나면 둘 사이의 값의 차이가 커지기에, 상대적으로 값이 차이나는 key (오랫동안 momentum을 이용한 key)를 뽑아낼 수 있는 구조인 Queue를 사용 (선입선출)
 
 ---
 
