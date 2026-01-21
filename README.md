@@ -81,6 +81,9 @@
 2. GitHub에 강의 11강 정리
 3. Lecture 15: 3D Vision 수강 시작 (Constructive Solid Geometry까지 진행)
 
+### 2026년 1월 21일
+1. Lecture 15: 3D Vision 수강
+
 ---
 
 ### Lecture 1: Introduction
