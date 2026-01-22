@@ -88,6 +88,9 @@
 1. Lecture 15: 3D Vision 수강
 2. GitHub에 강의 12강 정리
 
+### 2026년 1월 22일
+1. Assignment3 - Denoising Diffusion Probabilistic Models 시작
+
 ---
 
 ### Lecture 1: Introduction
