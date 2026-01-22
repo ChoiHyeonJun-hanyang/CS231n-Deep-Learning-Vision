@@ -832,20 +832,86 @@
 
 ### Lecture 13: Generative Models 1
 
-> **Main Keywords:** 
+> **Main Keywords:** Generative Models, Autoregressive Models, Variational Autoencoders, Autoencoder, ELBO
 
 #### 배운 점
 
 1. **Supervised vs Unsupervised Learning**
    - Supervised Learning은 Data (x, y)를 통한 학습으로 function: x -> y를 학습시키는 것이 목표 (Classification, regression, object detection, semantic segmentation, image captioning, etc.)
    - Unsupervised Learning은 Data x를 통해 data의 숨겨진 구조들이나 특징들을 학습하는 것이 목표 (Clusting, dimensionality reduction, density estimation, etc.)
-   - 
+   - Unsupervised Learning은 Label 없이 Data를 사용해야 하므로, 특정 데이터를 그룹으로 나눌 수 있는 정보들에 집중하게 되고, 이는 Clusting이나 혹은 데이터의 차원을 중요한 정보만 남기고 줄이는 방식의 dimensionality reduction에서 좋은 성능을 보이게 함
+2. **Generative vs Discriminative Models**
+   - **Discriminative Model**
+      - 이 Model에서 찾고 싶어하는 distribution은 p(y|x) -> 즉 x가 어떤 분포로 존재하건, 아무런 상관 없이 특정 데이터 x에 대한 class label y의 분포를 알고 싶어함
+      - 이 경우엔 만약 data x의 값이 우리가 정의한 label에 존재하지 않는다면, 우리는 우리가 정의한 y에서의 확률만을 알 수 있기에 unreasonable inputs에 대해서 대처 불가능
+      - Feature를 labels를 이용하여 학습한 후, 이를 classification에 활용
+   - **Generative Model**
+      - 이 Model이 알고 싶어하는 distribution은 p(x) -> 즉 모든 x에 대한 분포를 알고 싶어함 -> 가능한 모든 x가 분포에 고려되기 때문에, 우리가 가진 class label의 데이터에 대해선 높은 확률을 보이고, 우리가 가지지 않은 class label의 데이터에 대해선 낮은 값을 보임 -> 낮은 값이 나온다면 우리의 데이터에는 없는 정보이기에 unreasonable inputs에 대해서 대처 가능
+      - Outliers를 감지하고, labels 없이 Feature를 학습하며, 새로운 data를 Sample할 수 있음 -> 하지만 이 Sample된 image가 어떤 class인지 모르기에 상대적으로 실용성이 떨어짐
+      - Conditional Generative Model: p(x|y)를 알고 싶어함 -> 주어진 class label y에 대한 x의 distribution
+         - Bayes' Rule: p(x|y) = p(y|x) * p(x) / p(y) 를 통해서 Discriminative, Generative, Conditional Generative를 연결할 수 있음
+         - 만약 우리가 가진 모든 p(x|y)에서 확률 값이 낮게 나온다면, 이는 Outliear
+         - 새로운 data를 주어진 labels 내에서 생성 가능하고 이는 상대적으로 일반적인 Generative Model에 비해 실용적
+3. **Taxonomy of Generative Models에 대해**
+   - Generative Models는 크게 2가지로 분류 가능 -> Model이 직접적으로 P(x)를 구하는 방식 (Explicit density), P(x)에 대해 직접적으로 구하진 못하지만, P(x)로부터 Sample할 수 있는 방식 (Implicit density)
+   - **Explicit density**
+      - Tractable density: Autoregressive, 직접적으로 P(x)를 구하는 방식
+      - Approximate density: Variational Autoencoder (VAE), P(x)를 직접적으로 구하기 힘든 경우, 이를 추론하는 방식
+   - **Implicit density**
+      - Direct: Generative Adversarial Network (GAN), 직접적으로 P(x)를 통해서 sample하는 방식
+      - Indirect: Diffusion Models, P(x)로부터 sample을 낸 결과와 비슷하게끔 내기 위한 여러번의 동작을 수행하는 방식
+4. **Autoregressive Models에 대해**
+   - Maximum Likelihood Estimation: 우리는 원본 데이터의 분포를 알고 싶은 것이기에 이를 찾기 위해서 Estimation이 필요 -> dataset에 존재하는 data를 우리가 찾은 p(x)라는 distribution에 넣은 후, 이 값들을 전부 곱하여 값이 최대한 크게 만들어진다면, p(x)는 우리의 원본 데이터를 잘 표현하는 것과 같음
+   - Goal: p(x) = f(x, W)와 같은 explicit function을 구현하는 것, W는 p(x)의 곱들을 늘리는 MLE를 활용하여 학습
+   - 만약 x가 sequence라면, p(x) = p(x1, x2, ... , xT)로 표현가능 하고, Chain Rule 사용 시, p(x) = p(x1) * p(x2 | x1) *  ... * p(xT | x1, x2, ... , xT-1)로 표현할 수 있음 -> Conditional PDF의 경우 이전 내용을 고려하여 결과를 낸다는 점에서 RNN의 아이디어와 비슷하기에 이를 통해서 구현 가능, 또한 Language Prediction에서의 Transformer 처럼 Masked Transformer를 사용하여 RNN와 같은 방식으로 사용 가능
+   - x가 Image일 땐, 각 pixel은 0 ~ 255 사이의 값을 3개 가지고 있기에 이 값을 예측하는 방식으로 진행, 3 x H x W의 image를 각각의 pixels value로 나눈 후, 이 값을 RNN이나 Transformer를 넣음
+   - 하지만 이 경우엔, 1024 x 1024 image에서 subpixels가 3M개가 나오고 이는 굉장히 비효율적이기에, subpixels로 나누는 것이 아닌 tiles로 나눈 후 이를 RNN이나 Transformer에 넣는 방식으로 사용
+   - Autoregressive Models은 학습에서 정답 데이터를 통해서 학습하기에 RNN이나 Transformer의 결과에 상관없이 학습이 빠르게 진행되지만, 학습 후의 Sampling 과정에서 앞선 모든 것이 계산되어야 이후의 값을 계산할 수 있다는 문제에 의해 속도가 오래 걸릴 수 있음
+5. **Autoencoders에 대해**
+   - Idea: inputs x를 Unsupervised method를 통해 학습하여 features z를 추출하고자 함 -> 여기서의 features는 object에 대한 핵심 특성을 담고 있어야 함 (downstream tasks에서도 사용할 수 있게끔)
+   - labels 없이 학습시키는 방법으로 Encoder를 통해 추출한 features z를 Decoder의 inputs으로 넣은 후 이를 통해 Reconstructed input data를 만드는 방식을 사용 (Encoder와 Decoder는 보통 MLP, CNN, Transformer를 주로 사용)
+   - 이렇게 추출한 데이터를 기존의 원본 데이터와 L2 Loss를 사용하여 비교하고 학습하는 것에 사용 -> 이 때, x에 비해 z를 매우 작게 설정함으로써 복원과정을 어렵게 하여 학습의 효율을 올림 (z의 공간이 작기에 방대한 양의 정보를 담고 있는 x에서 중요한 데이터들만을 z에 저장해야함)
+   - 이후 test과정에선, 학습시킨 Encoder를 사용하여 Features를 추출한 후, 이를 통해 label을 추측하고 실제 label과 비교 (softmax)
+   - 만약 우리가 새로운 z를 만들어낼 수 있다면, 이를 Decoder의 inputs으로 사용 시 새로운 이미지를 만들어낼 수 있음 -> 만약 z를 (50, 100)에서 저장하였을 때, 우리가 랜덤한 z를 0에서 생성하였다면, Decoder는 제대로된 z를 받지 못하기 때문에 Noise가 나올 수 있음
+5. **Variational Autoencoders (VAEs)에 대해**
+   - p의 분포에 대해 직접적으로 수식으로 표현할 순 없지만, p보다 무조건 작은 값을 수식으로 표현할 수 있고, 이 값을 최대화시킨다면 p를 최대화시키는 것과 비슷하기에 lower bound를 optimize하는 방식  
+   - Autoencoder에서 새로운 z를 생성하는 것이 어렵다는 단점이 있었기에, 이를 해결하기 위해서 z를 우리가 아는 분포가 되게끔 강제하는 방식
+   - 기본적으로 모델은 우리가 아는 prior p(z)를 통해서 sample된 z가 특정 과정을 거쳐서 우리의 데이터 x를 만들어내는 방식의 구조
+   - **Training**
+      - 기본 아이디어는 Maximum likelihood를 사용, 이를 사용하기 위해선 p(x)를 찾아야하지만 이는 marginalize해도 불가능
+      - Bayes' Rule: p(x) = p(x|z) * p(z) / p(z|x) -> p(z | x)를 구할 수 있는 방법이 없음 -> 학습을 가능케하기 위해서 p(z|x)와 비슷한 값을 유도할 수 있는 q(z| x) distribution을 도입
+      - z를 통해 p(x|z)를 구하던 block을 Decoder Network라고 하고, x -> q(z|x)를 하기 위한 block을 Encoder block이라고 함 -> Encoder block의 경우, latent codes z의 distribution을 추측하는 것이 목적
+      - p(x|z) = N(mu, std^2), q(z|x) = N(mu(z|x), var(z|x))라고 가정하여, Encoder의 output을 q(z|x)의 mean, var를 나오도록 설계, 또한 Decoder도 p(x|z)의 mean을 output으로 나오도록 설계
+      - log p(x|z) = -(1/var) * ||x - mu|| ^ 2 + C 이기에 이를 최대화하는 것은 x와 mu(x|z)의 차이를 줄이는 것이고, 이는 z를 통해 생성한 x의 분포값이 실제 데이터와 비슷해야 한다는 것을 의미
+   - **ELBO**
+      - MLE를 하기 위해 우리가 필요한 값은 p(x) or log p(x)
+      - log p(x) = log (p(x|z) * p(z) / p(z|x)) = log ((p(x|z) * p(z) * q(z|x)) / (p(z|x) * q(z|x))) = log p(x|z) - log (q(z|x) / p(z)) + log (q(z|x) / p(z|x))
+      - log p(x)는 z를 기준으로 상수이기에, Ez[log p(x)] = log p(x) -> log p(x) = Ex[log p(x|z)] ... (1) - Ez[log (q(z|x) / p(z))] ... (2) + Ez[log (q(z|x) / p(z|x))] ... (3) 로 변경 가능함
+      - (1): x를 통해서 얻어질 수 있는 z에 대한 log p(x|z)에 대한 기댓값, (2): KL-Divergence: q(z|x)와 p(z)가 얼마나 다른지를 의미 -> x를 통해서 추측한 분포가 실제 z와 얼마나 잘 맞는지를 나타냄 -> 특히 KL Divergence에는 수식 내에서 q(z|x)가 우리가 원하는 범위 내에서 있게끔 강제하는 값이 있기에 z를 고정시키는 효과도 존재
+      - (3): 우리가 구할 수는 없지만 log p(x)를 최대화시키는 문제에서 이를 빼고 (1) + (2)만을 Optimization하더라도 log p(x)를 Optimization하는 효과와 비슷함
+   - **Overview**
+      - **Training**
+         - 1. input을 encoder에 넣은 후, z의 distribution에 대한 정보를 얻어냄
+         - 2. Prior loss: 여기서 KL Divergence가 z의 분포가 unit Gaussian이 되게끔 강제함 -> (2)
+         - 3. Encoder의 output인 q(z|x)를 통해 z를 sample -> 여기서 z = Normal(mu, var)의 형식으로 선언 시, Backpropagation이 안될 가능성이 있기에, z = mu + std * eps, eps = Normal(0, 1)의 방식을 사용 (Reparameterization trick)
+         - 4. sampling을 통해 얻은 z를 decoder에 넣어서 예상한 원본 데이터 분포의 평균을 얻음
+         - 5. Reconstruction loss: 예측한 분포의 평균과 x를 L2 loss를 통해 비교 -> (1)
+      - **Sampling**
+         - 1. z를 prior distribution을 통해 sample (주로 unit Gaussian)
+         - 2. Decoder에 z를 input으로 넣은 후 얻은 분포를 통해 새로운 이미지를 생성
+   - Disentangling: feature을 diagonal에 저장 (diagonal gaussian을 사용) -> 서로에게 영향을 주지 않음 -> disentangling되는 경우가 존재
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Generative Model의 정확성
+**Q.** 교수님이 말하시기에, Self-Supervised Model이나 Contrastive Learning Model이 Unconditional Generative Model 보다 좋은 성능을 낼 확률이 높은데, 만약 데이터의 Distribution을 안다고 가정했을 때, 어떻게 Generative Model의 정확도가 낮을 수 있는지에 대한 의문
+> **A.**
+> - 물론 데이터에 대한 완벽한 Distribution을 알 수 있다면, 고차원의 데이터에선 이를 완벽하게 추정하는 것은 불가능에 가까움. 또한 Generative Model은 생성한 data가 특정 분포에 잘 맞게끔 생성해야 하기에 상대적으로 Image Generating에서 중요하지 않은 정보인 배경 복원에 많은 노력을 쏟음.
+> - 반면 Contrastive Learning은 이미지를 생성하는 것이 아니라, Positive Pair는 가깝게, Negative Pair는 멀게 임베딩하는 것이 목표임. 덕분에 불필요한 픽셀 정보는 무시하고, 물체의 형태나 의미같은 핵심 특징(Key Features) 학습에만 집중할 수 있어 Downstream Task 성능이 더 우수함.
+
+##### 2. Implicit density의 모호성
+**Q.** Implicit density의 설명에는 P(x|y)를 구할 수 없지만, 이를 통해서 sample하는 방식인데, 어떻게 P(x|y)를 모르는 상태에서 이를 통한 sample이 가능한 지에 대한 의문 
+> **A.** 원본 data의 distribution를 수식으로 정의하는 것은 불가능함. 따라서 이를 직접 구하는 대신 우리가 잘 아는 Distribution (ex. Gaussian Distribution)를 입력 받고, 원본 데이터와 유사한 형태로 변환해주는 함수 (Neural Network)를 학습시키는 방식으로 진행, 즉 우리는 원본 데이터 분포를 모름에도 이를 비슷하게 구현해주는 Generator를 생성하여 이를 통한 sampling을 가능하게 함.
 
 ---
 
