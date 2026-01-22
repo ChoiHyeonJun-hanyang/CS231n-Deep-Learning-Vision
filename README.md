@@ -89,7 +89,8 @@
 2. GitHub에 강의 12강 정리
 
 ### 2026년 1월 22일
-1. Assignment3 - Denoising Diffusion Probabilistic Models 시작
+1. Assignment3 - Denoising Diffusion Probabilistic Models
+2. GitHub에 강의 13강 정리
 
 ---
 
@@ -830,6 +831,42 @@
 ---
 
 ### Lecture 13: Generative Models 1
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. **Supervised vs Unsupervised Learning**
+   - Supervised Learning은 Data (x, y)를 통한 학습으로 function: x -> y를 학습시키는 것이 목표 (Classification, regression, object detection, semantic segmentation, image captioning, etc.)
+   - Unsupervised Learning은 Data x를 통해 data의 숨겨진 구조들이나 특징들을 학습하는 것이 목표 (Clusting, dimensionality reduction, density estimation, etc.)
+   - 
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 14: Generative Models 2
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 15: 3D Vision
 
 > **Main Keywords:** 
 
