@@ -92,6 +92,9 @@
 1. Assignment3 - Denoising Diffusion Probabilistic Models
 2. GitHub에 강의 13강 정리
 
+### 2026년 1월 23일
+1. Lecture 16: Vision and Language 수강
+
 ---
 
 ### Lecture 1: Introduction
