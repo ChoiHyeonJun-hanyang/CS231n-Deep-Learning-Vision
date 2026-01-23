@@ -93,7 +93,7 @@
 2. GitHub에 강의 13강 정리
 
 ### 2026년 1월 23일
-1. Lecture 16: Vision and Language 수강
+1. Lecture 16: Vision and Language 수강 시작 (Flamingo까지 진행)
 
 ---
 
