@@ -1,0 +1,8 @@
+cs231n/datasets/
+__pycache__/
+*.pyc
+.ipynb_checkpoints
+**/datasets/
+assignment3/cs231n/datasets/
+assignment3/cs231n/data/
+assignment3/cs231n/exp/
