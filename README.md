@@ -27,7 +27,8 @@
 - [x] Assignment 3 - Self-Supervised Learning for Image Classification까지
 
 ### 5주차 (진행중)
-- [ ] 강의 16강 ~ 18강 수강
+- [x] 강의 16강 수강
+- [ ] 강의 17 ~ 18강 수강
 - [ ] Assignment 3 종료
 - [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
 
@@ -94,6 +95,10 @@
 
 ### 2026년 1월 23일
 1. Lecture 16: Vision and Language 수강 시작 (Flamingo까지 진행)
+
+### 2026년 1월 24일
+1. Lecture 16: Vision and Language 수강
+2. Assignment3 - CLIP and Dino 시작
 
 ---
 
