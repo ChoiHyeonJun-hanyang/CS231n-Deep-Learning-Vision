@@ -100,6 +100,9 @@
 1. Lecture 16: Vision and Language 수강
 2. Assignment3 - CLIP and Dino
 
+### 2026년 1월 25일
+1. Lecture 17: Robot Learning 수강
+
 ---
 
 ### Lecture 1: Introduction
