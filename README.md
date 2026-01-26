@@ -950,7 +950,7 @@
       - 이 학습이 진행되는 과정은, 처음엔 Generator의 성능이 매우 낮아서 비교적 적은 학습에도 Discriminator의 정확도가 증가하게 되고, 이를 속이는 것이 목적인 Generator가 이미지를 더욱 사실적으로 만드는 방향으로 학습을 진행 (길항작용과 비슷)
       - Model 내부에서의 학습은 Backpropagation을 통해 진행되며, Discriminator의 판단이 Generator이 만든 이미지를 통해 Generator로 이동하며 학습을 진행
    - **Objective function**
-      - min_G max_D(E_x~p_data[logD(x)] + E_z~p(z)[log(1 - D(G(z)))]), D(x) = P(x is real)
+      - min_G max_D(E_x,p_data[logD(x)] + E_z,p(z)[log(1 - D(G(z)))]), D(x) = P(x is real)
       - **max_D**
          - x ~ p_data, D(x)에서 D를 증가시키는 것은 Discriminator가 진짜 데이터인 x를 진짜라고 분류, z ~ p(z), 1 - D(G(z))에서 이 값을 증가시키려면 D(G(z))의 값이 0이어야 하고, 이 의미는 Discriminator가 z로부터 만들어진 가짜 이미지 G(z)를 가짜라고 분류
          - 즉 max_D는 Discriminator가 생성 이미지와 원본 이미지를 제대로 분류하기 위한 Objective function임
