@@ -103,6 +103,9 @@
 ### 2026년 1월 25일
 1. Lecture 17: Robot Learning 수강
 
+### 2026sus 1월 26일
+1. GitHub에 강의 14강 정리
+
 ---
 
 ### Lecture 1: Introduction
@@ -928,18 +931,97 @@
 
 ### Lecture 14: Generative Models 2
 
-> **Main Keywords:** 
+> **Main Keywords:** Generative Adversarial Networks, Diffusion Models, Rectified Flow, Latent Diffusion Models, 
 
 #### 배운 점
 
-1. 
-   -
+1. **Generative Adversarial Networks에 대해**
+   - **추상적인 이해**
+      - p_data라는 보편적으로 통용되는 굉장히 복잡한 Distribution을 찾고, 이를 통해서 sample하는 것이 목적
+      - 우리가 가진 data x_i는 p_data의 분포에 존재, 하지만 p_data라는 분포는 굉장히 복잡한 분포기에 이를 우리가 수학적으로 표현하는 것은 불가능에 가까움
+      - GANs에선 p_data를 찾는 대신, p_data와 최대한 비슷하게 생긴 p_model을 찾고 여기서 sampling을 수행
+   - **구체적인 이해**
+      - latent variable z를 간단한 p(z) (주로 Unit Gaussian) 를 통해 얻음, 여기서 z는 x를 설명하는 압축된 정보
+      - p(z)를 통해 얻어낸 z를 Generator Network G에 넘겨서 우리가 새롭게 만든 sample x를 만듦
+      - 여기서 만든 x는 p_G (Generator Distribution)을 통해 만들어진 sample이고 우리는 p_G = p_data가 되기를 원함
+   - **학습 방법**
+      - 이를 학습시키는 방법은 위와 같은 방식을 통해서 만들어낸 이미지를 실제 데이터의 이미지와 같이 Discriminator Network에 input으로 넣음 (Generator는 Discriminator를 자신이 생성한 이미지로 속이는 것이 목적)
+      - 이후 Discriminator가 어떤 사진이 진짜이고 어떤 사진이 가짜인지를 판단하는 방식으로 학습을 진행
+      - 이 학습이 진행되는 과정은, 처음엔 Generator의 성능이 매우 낮아서 비교적 적은 학습에도 Discriminator의 정확도가 증가하게 되고, 이를 속이는 것이 목적인 Generator가 이미지를 더욱 사실적으로 만드는 방향으로 학습을 진행 (길항작용과 비슷)
+      - Model 내부에서의 학습은 Backpropagation을 통해 진행되며, Discriminator의 판단이 Generator이 만든 이미지를 통해 Generator로 이동하며 학습을 진행
+   - **Objective function**
+      - min_G max_D(E_x~p_data[logD(x)] + E_z~p(z)[log(1 - D(G(z)))]), D(x) = P(x is real)
+      - **max_D**
+         - x ~ p_data, D(x)에서 D를 증가시키는 것은 Discriminator가 진짜 데이터인 x를 진짜라고 분류, z ~ p(z), 1 - D(G(z))에서 이 값을 증가시키려면 D(G(z))의 값이 0이어야 하고, 이 의미는 Discriminator가 z로부터 만들어진 가짜 이미지 G(z)를 가짜라고 분류
+         - 즉 max_D는 Discriminator가 생성 이미지와 원본 이미지를 제대로 분류하기 위한 Objective function임
+      - **min_G**
+         - z ~ p(z), 1 - D(G(z))에서 이 값을 감소시키려면, D(G(z))의 값이 1이어야하고, 이 말은 Generator가 만든 image를 Discriminator가 제대로 구분하지 못하는 상황을 의미
+         - 즉 min_G는 Discriminator가 구분하지 못할 정도로 실제 이미지와 비슷한 생성형 이미지를 Generator가 만들도록 시키는 Objective function임
+      - E_x + E_z = V라고 한 후, 이를 통해 gradient descent를 진행 -> D의 경우는 maximize가 목표기에 gradient를 더해주고, G의 경우는 minimize가 목표기에 gradient를 빼줌
+      - **문제점**
+         - Generator와 Discriminator은 독자적인 2개의 Neural Networks이고 대부분의 경우에서 두 Networks의 parameter 개수가 다른데도, 한 Objective function 내에서 하나는 maximize, 다른 하나는 minimize 해야한다는 점에서 어려움이 존재
+         - V는 loss function이 아니기에 단순히 V만 보고는 이 model의 성능 파악이 힘듦, 만약 V의 값이 크다면 Discriminative model의 성능이 매우 좋은 것을 의미
+         - 또한 log(1 - D(G(z))의 경우, 초반에는 D(G(z))의 값이 0일 가능성이 높음 (Generator의 학습은 느린 반면에 Discriminator의 학습은 상대적으로 빠르기에)
+         - 위의 상황과 같은 경우엔, Discriminator의 학습 속도와 달리 D(G(z))를 통한 미분에 학습을 의지하는 Generator는 더욱 더 학습이 느려지거나 학습이 거의 불가능해지는 Gradient vanishing 문제에 직면
+         - 기존의 목적인 D(G(z))를 최소화 시키는 조건을 만족하면서 학습 초기의 Gradient vanishing을 해결하기 위해서 log(1 - D(G(z))를 -log(D(G(z))로 변경
+      - Inner objective: D_G(x) = p_data(x) / (p_data(x) + p_G(x)) -> p_G의 수준이 높을수록 값이 낮아짐, 현재 p_G가 만들어낸 수준을 확률로 계산
+      - Outer objective: p_G(x) = p_data(x), 즉 우리는 Discriminator가 생성된 이미지 x를 받았을 때와 진짜 이미지를 받았을 때, 이를 구별하는 것이 거의 불가능할 정도로 최적화되는 것을 원함
+         - 하지만 이 방식의 경우, 우리가 사용하는 D와 G의 neural networks가 이를 표현할 수 있을지에 대한 확신이 불가
+         - 또한 유한한 데이터를 사용해서 p_G를 p_data와 동일하게 만드려는 것이 불가능할 수 있음 -> Global minimum에 도달 불가
+   - **GAN Architectures**
+      - DC-GAN: Generator와 Discriminator를 단순히 5-layer CNNs의 구조로 구현 -> ViT가 떠오르기 전에 GANs가 연구의 대상이었기 때문에
+      - StyleGAN: 기존의 latent variable인 z를 Mapping network를 통해서 w로 변환한 후, 이를 AdalN이라는 정규화 과정에서 사용, 또한 데이터의 품질을 올리기 위해서 Noise를 중간에 섞어가면서 sampling을 시도
+         - AdalN: 기존의 데이터가 가지고 있던 평균값과 표준편차값을 우리가 원하는 b와 w로 변경하는 Normalization -> z를 통해 얻어낸 w에 대한 스타일을 강제로 주입
+   - Latent Space Interpolation: Latent space는 전부 unit gaussian distribution이기에 zt = t*z0 + (1-t)*z1과 같은 방식으로 각각의 특징을 섞은 새로운 latent variable을 만들 수 있음
+   - 장점: Objective function을 포함한 구조가 간단함, 굉장히 좋은 Image generation을 보여줌
+   - 단점: 학습의 정도를 파악할 수 있는 직관적인 loss function이 존재 x, 학습이 불안정하고, 많은 양의 데이터와 큰 크기의 모델을 학습하는 것에 있어서 적합하지 않음
+2. **Diffusion Models에 대해**
+   - **추상적인 이해**
+      - GAN와 비슷하게 z를 noise distribution p_noise에서 sample (마찬가지로 p_noise는 보통 unit Gaussian, z는 항상 이미지와 같은 크기여야 함)
+      - 다양한 noise levels인 t에 대해서 x_t라는 노이즈에 의해서 약간 변형된 이미지를 생성
+      - 이렇게 생성된 이미지를 t와 같이 neural network에 넣어서 약간의 노이즈를 제거하는 방식으로 학습을 진행
+      - 이후 학습된 Neural network를 이용하여, p_noise에서부터 완전한 노이즈값 x1을 가져와서 neural network를 많이 돌린 후, 완전한 노이즈로부터 노이즈를 제거하면서 새로운 이미지를 생성하는 방식
+   - **Rectified Flow**
+      - z ~ p_noise, x ~ p_data, t ~ Uniform[0, 1] -> x_t = (1 - t)*x + t*z, v = z - x
+      - x_t는 원본데이터를 노이즈로 약간씩 변경한 데이터이고, 우리의 목표는 L = |f(x_t, t) - v|^2를 최소화시키는 것 -> v는 단순히 x에서부터 z를 연결한 선이고, Neural Network f를 통해서 노이즈를 제거한 값이 우리가 원하는 이미지의 형태와 근접해지기를 원함 (즉 f라는 함수가 z - x를 수행하는 모델이 되기를 원함)
+      - Training에선 f라는 neural network를 여러 개의 data와 여러 개의 t값들을 통해서 다양한 이미지에서 어느 정도의 노이즈를 복원하는지에 대한 방식을 L2 Loss를 통해서 학습
+      - Sampling에선 x ~ p_noise의 데이터를 우리가 원하는 # of steps만큼 f를 통해 연산하며 나온 값을 통해 이동하면서 최종 x0 (생성된 최종 이미지)에 도달하는 것이 목적
+      - **Conditional Rectified Flow**
+         - 기존의 Unconditional Rectified Flow는 완전한 noise인 z부터 복원을 시작하였을 때, 도착지가 어디일지 모름 (p_data 내부에 존재하는 이미지 중 하나)
+         - 이 문제를 해결하기 위해, f의 input에 우리가 원하는 이미지 정보인 y를 넣어줌으로써, y에 해당하는 구역으로 가게끔 v값을 조정
+         - sampling의 경우에도, training에서 특정 label y에 대해 기억해둔 구역으로 이동하는 방식으로 새로운 이미지를 생성
+         - **Classifier-Free Guidance (CFG)**
+            - Hyperparameter인 특정 확률값 (주로 0.5)을 세팅한 후, 학습의 50%는 Unconditional Rectified Flow의 방식대로 f를 학습시키고, 나머지 50%는 Conditional Rectified Flow의 방식대로 f를 학습시킴
+            - 우리가 y의 값에 null을 넣는다면, p(x)로 향하는 velocity값이 나올 것이고, y의 값에 실제 class label을 넣는다면, p(x|y)로 향하는 velocity값이 나올 것임
+            - 이후 Sampling 과정에서, 우리는 가장 y같은 이미지를 생성하는 것을 원하기에 Uncoditional velocity와 Conditional velocity를 구한 후, v_cfg = v_cond + w * (v_cond - v_uncond)의 방식으로 더욱 conditional한 velocity 값을 이용하며 진행
+            - 이 과정을 통해서 y의 그림을 그리면서 동시에 보편적인 특성을 제거하면서, y만의 특성을 주로 고려하여 이미지를 생성 -> 이는 생성된 이미지의 quality를 더욱 높여줌
+            - 하지만 이 방식의 경우, 기존의 Rectified Flow에 비해 velocity를 구하는 과정에서 Neural Network의 연산이 2배로 필요하기 때문에 연산 비용 측면에서 문제가 발생
+      - **Optimal Prediction**
+         - 만약 t = 1이라면, x_t = 0*x + 1*z이기에 완전한 noise이고, 이 경우에 Optimal Prediction은 많은 데이터에 대해서 손실을 최소화시켜야 하기에 optimal v의 방향이 p_data의 평균을 향하는 방향의 반대 방향이 됨
+         - 만약 t = 0이라면, x_t = 1*x + 0 *z이기에 원본 데이터이고, 이 경우에 Optimal Prediction은 마찬가지로 손실을 최소화시켜야 하기에 optimal v의 방향이 p_noise의 평균을 향하는 방향이 됨
+         - 하지만 t가 0.5와 비슷한 중간값인 경우, 주어진 t에 대해서 x_t를 만족하는 수많은 (x, z) pairs가 있기 때문에, 어디로 가야할지 모르는 model은 수많은 (x, z)를 이용하여 optimal v를 평균값으로 설정 -> 이는 모호한 이미지를 만드는 결과
+         - t ~ Uniform[0, 1]이었기에, Optimal v를 찾기 쉬운 1과 0 근처가 Optimal v를 찾기 어려운 0.5 근처와 비슷하게 학습이 되기에, 0과 1 근처에선 잘 대처하던 model이 0.5 근처에서 애매한 결과를 내는 문제가 발생
+         - **Noise Schedules**
+            - Optimal v를 구하기 어려운 부분에 더 자주 noise를 주는 Noise Schedules를 사용 -> 주로 logit-normal sampling (상대적으로 학습이 쉬운 0과 1 근처를 적게 학습하고, 학습할 때 어려운 구간인 0.5 근처를 t가 더욱 자주 나오게해서 학습을 더 많이 시킴)
+            - 만약 data의 resolution이 높다면, noise를 강하게 해야 model의 학습이 어려워지기에 0.75 근처에서 t의 빈도를 높이는 Noise Schedules를 사용
+   - **Latent Diffusion Models (LDMs)**
+      - 이미지로부터 특징들을 추출해내는 Encoder와 추출된 특징을 통해서 원본이미지를 복원하는 Decoder를 학습시킴 (Encoder와 Decoder는 CNNs with attention을 사용하고 이는 이전에 Video Understanding에서 배운 Non-local block과 비슷)
+      - 학습된 Encoder를 고정한 상태에서 추출해낸 Features (or Latent variables)에 Noise를 추가하여 Noisy Latent를 만들고 이를 Diffusion model을 통해서 Latent의 noise를 줄여가면서 Denoised Latent를 얻음
+      - 이후 Sampling 과정에서 Latent의 노이즈를 제거하면서 학습한 Diffusion model을 사용해서 랜덤하게 sample된 latent를 Denoised latent로 만들고 이를 기존에 학습한 Decoder를 통해서 최종 이미지로 변환
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. VAE와 GAN에서의 z의 차이에 의한 효율 문제
+**Q.** VAE에선 학습 과정에서 x를 통해서 추출한 features을 unit gaussian 분포에 맞게끔 고정시키고 이를 랜덤으로 뽑아서 sampling하였다면, GAN에선 처음부터 특정 분포에서 랜덤하게 값을 뽑아서 sampling을 하는데 이 방식에서의 GAN이 더 좋은 효율을 보여주는 것이 아닌지에 대한 의문
+> **A.**
+> - VAE는 Explicit density 모델이기에, p(x)의 형태를 구하는 것이 목적이고, GAN은 Implicit density 모델이기에 p(x)의 형태를 알 필요 없이 단순히 이와 비슷한 sample을 만드는 것이 목적
+> - 이 이유로 sampling 과정에서는 GAN이 더욱 효율적일 수 있지만, VAE는 z와 x의 연결관계를 가지고 있는 반면에 GAN은 z와 x의 연결관계가 미약하기 때문에, x를 통해서 z를 구하는데 복잡하고 많은 양의 연산이 필요 (VAE에선 Decoder가 z를 통해서 x를 만들어내기에 x를 통한 z의 학습이 가능하지만, GAN에서는 x를 통한 z의 학습이 불가능)
+
+##### 2. Classifier-Free Guidance에서의 f
+**Q.** CFG에서 f에서 Unconditional에서의 학습과 Conditional에서의 학습을 동시에 진행할 때, 이 학습의 결과를 하나의 Neural Network에서 저장하기에 상대적으로 저하될 수 있는 f의 생성능력에 대한 의문
+> **A.**
+> - 모델의 구조 상, 우리가 input을 null로 넣거나, class label로 넣는 식으로 구분해서 넣어주고, 모델에서 사용하는 Attention 매커니즘 덕분에 모델 자체의 성능이 크게 저하되지 않음
+> - 또한 성능이 저하된다고 할지라도, Conditional - Unconditional의 과정을 통해 조건부 특징을 극단적으로 증폭시키기에 문제가 없음
 
 ---
 
