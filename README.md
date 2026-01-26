@@ -931,7 +931,7 @@
 
 ### Lecture 14: Generative Models 2
 
-> **Main Keywords:** Generative Adversarial Networks, Diffusion Models, Rectified Flow, Latent Diffusion Models, 
+> **Main Keywords:** Generative Adversarial Networks, Diffusion Models, Rectified Flow, Latent Diffusion Models, Diffusion Transformer, Diffusion Distillation, Generalized Diffusion
 
 #### 배운 점
 
@@ -1008,6 +1008,34 @@
       - 이미지로부터 특징들을 추출해내는 Encoder와 추출된 특징을 통해서 원본이미지를 복원하는 Decoder를 학습시킴 (Encoder와 Decoder는 CNNs with attention을 사용하고 이는 이전에 Video Understanding에서 배운 Non-local block과 비슷)
       - 학습된 Encoder를 고정한 상태에서 추출해낸 Features (or Latent variables)에 Noise를 추가하여 Noisy Latent를 만들고 이를 Diffusion model을 통해서 Latent의 noise를 줄여가면서 Denoised Latent를 얻음
       - 이후 Sampling 과정에서 Latent의 노이즈를 제거하면서 학습한 Diffusion model을 사용해서 랜덤하게 sample된 latent를 Denoised latent로 만들고 이를 기존에 학습한 Decoder를 통해서 최종 이미지로 변환
+      - Encoder와 Decoder를 학습시키는 방법은 VAE를 이용하는 것, 하지만 VAE의 경우 Blurry한, 즉 좋지 않은 이미지를 주기 때문에, KL prior weight를 작게 세팅함 -> KL Divergence은 z를 unit gaussian으로 강제하는 objective function으로, 이 값을 작게 하여 기존의 VAE의 문제를 해결하려고 함
+      - 또한 GAN에서 아이디어를 얻어, Discriminator를 Decoder로 통해 복원한 이미지에 사용하여 더욱 사실적인 이미지를 만들도록 강제함 (Modern LDM의 pipelines는 VAE + GAN + diffusion)
+   - **Diffusion Transformer (DiT)**
+      - Transformer block을 이용한 Diffusion, Noised Latent를 ViT와 같이 patches로 나눈 후, label y, timestep t와 같은 조건들을 Embedding하여 DiT Block에 넣는 방식
+      - 기본적인 형태는 Transformer block과 같지만, Block 내부의 4개의 행동 이후 Scale, Shift를 실행 -> Scale과 Shift는 Embedding된 조건들을 MLP를 통해서 alpha, beta, gamma와 같은 값들로 바꾸고 이를 각각의 Scale과 Scale, Shift에 input으로 넣음 (파라미터 (평균, 분산)을 동적으로 바꿔줌, 이는 StyleGAN에서 AdaLN과 같)
+      - Cross-Attention: 기존의 Transformer block에서 Self-attention과 FFN 사이에 LayerNorm + Multi-Head Cross-Attention (block's input, Conditioning)을 실행
+      - Joint-Attention: LayerNorm과 Self-Attention을 하기전에 Input tokens과 Conditioning을 Concatenate해서 하나의 input으로 고려하고 진행
+      - Cross-Attention과 Joint-Attention은 text to image 같이 조건의 정보량이 많은 경우에 주로 사용
+   - **Diffusion Distillation**
+      - Distillation (지식 증류)는 이미 학습시켜놓은 Neural Networks의 지식을 활용해서 새로운 Neural Network를 학습시키는 방법
+      - Sampling 과정에서 Diffusion Model을 사용하려면, 우리가 정해놓은 Timesteps만큼 무거운 Diffusion Model의 연산을 해야 한다는 문제 존재 -> 이를 줄이기 위해서 Distillation 사용
+      - 기존의 diffusion model의 경우, timestep을 하나씩 밟으며 진행 -> 이를 학습하여 학생 diffusion model을 생성, 학생은 선생이 2번에 가는 곳을 한번에 가는 방식으로 학습 -> 이를 반복한다면 z -> x를 1 ~ 4번까지 줄일 수 있음
+      - 또한 CFG의 Sampling 과정에서 우리는 Uncoditional, Conditional velocity를 따로 구하고, 이 값을 통해 v_cfg를 구하는 방식으로 진행되었기에, timestep마다 2번의 model 연산이 필요함
+      - 하지만 Distillation을 이용한다면, 학생은 기존의 모델이 2번의 연산을 통해 구한 v_cfg를 학습시켜서 한 번의 연산으로 해결할 수 있음
+   - **Generalized Diffusion**
+      - x ~ p_data, z ~ p_noise, t ~ p_t -> x_t = a(t)*x + b(t)*z, y_gt = c(t)*x + d(t)*z, y_pred = f(x_t, t), L = |y_gt - y_pred|^2
+      - Rectified Flow: a(t) = 1-t, b(t) = t, c(t) = -1, d(t) = 1의 형태로 표현 가능
+      - Variance Preserving (VP): a(t) = sqrt(sigma(t)), b(t) = sqrt(1 - sigma(t)) -> a^2 + b^2 = 1이므로 x와 z가 unit gaussian이라면 x_t도 unit gaussian을 유지
+      - Variance Exploding (VE): a(t) = 1, b(t) = sigma(t) -> 데이터 x를 x_t에 그대로 넘겨주면서, z의 값을 timestep이 지날수록 키워서 x의 분포를 유지하면서 Noise로 가득채우는 방법
+      - x_prediction: y_gt = x (c(t) = 1, d(t) = 0) -> 정답을 바로 맞추게끔 하기
+      - eps-prediction: y_gt = z (c(t) = 0, d(t) = 1) -> x_t를 주고 추가된 Noise z가 뭔지 맞추게 하기
+      - v-prediction: y_gt: b(t)*z - a(t)*x -> 노이즈에서 원본으로 가는 방향이 어디인지와 속도가 어느정도인지 맞추게끔 하기
+   - Diffusion의 forward process는 Gaussian Noise를 더하는 것이고 이는 Diffusion process, U-net이 Noise를 원래의 이미지로 복원하는 과정을 거침 -> Foward pass에서 더해지는 Gaussian Noise의 분포를 알고 있기 때문에 (q(x_t|x_(t-1))), backward process를 VAE와 마찬가지로 lower bound를 Optimization하는 방식으로도 생각할 수 있음 (p(x_(t-1)|x_t))
+   - scores function s(x) = gradient of log p(x)라고 하였을 때, 이 scores function은 확률이 가장 높은 곳으로 향하는 방향을 나타내고, 우리는 앞서서 말한 것처럼 Gaussian을 어떤 방향으로 더했는지 알기때문에 Noise가 더해진 방향의 반대로 진행한다면, scores를 올리는 결과를 도출 -> 확률값을 올리는 것 (Optimization)
+   - 지금까지는 Timestep에 따른 Discrete한 상황을 생각했다면, Continuous noising process에서는 SDE를 푸는 방식으로 neural network를 학습시킬 수 있음
+3. **Autoregressive Models with VAE**
+   - 기존의 Autoregressive의 경우, sequential의 문제나 너무나 많은 메모리를 요구한다는 점에서 비효율적이었지만, VAE의 Encoder를 사용해서 압축한 Latent를 넣는 방식으로 비효율성을 해결
+   - Encoder에서 이미지를 언어와 같이 정수로 바꿔서 다룸, 이 값들을 Autoregressive model이 LLM이 하는 방식처럼 다음 단어를 맞추는 방식대로 진행하고 이로 인해 나온 정수값들을 Decoder가 이미지로 복원하는 방식
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -1022,6 +1050,16 @@
 > **A.**
 > - 모델의 구조 상, 우리가 input을 null로 넣거나, class label로 넣는 식으로 구분해서 넣어주고, 모델에서 사용하는 Attention 매커니즘 덕분에 모델 자체의 성능이 크게 저하되지 않음
 > - 또한 성능이 저하된다고 할지라도, Conditional - Unconditional의 과정을 통해 조건부 특징을 극단적으로 증폭시키기에 문제가 없음
+
+##### 3. Latent Diffusion Models의 Encoder와 Decoder
+**Q.** LDMs에서 Encoder와 Decoder를 VAE의 것으로 가져오면서, KL의 가중치를 낮게 설정한다던데, 물론 VAE의 단점인 Blurry images를 해결할 수 있지만 z를 Model이 원하는 대로 저장한다고 하면 Sampling 과정에서 랜덤한 노이즈를 Unit Gaussian에서 sample할 때, 이 z가 특징값을 가진다고 장담할 수 없는 문제에 대한 의문  
+> **A.**
+> - GAN의 Discriminator가 사실적인 그림을 만들도록 압박하면서, z의 공간이 멋대로 흩어지더라도, 그 사이의 빈 공간들을 자연스러운 이미지로 메우는 효과가 존재
+> - KL을 무시하고 학습을 종료한 뒤, 정규화되지 않는 z의 분포를 측정해서 이 분포에 맞게끔 Noise를 sampling
+
+##### 4. Variance Exploding (VE)
+**Q.** VE 방식을 보면 x를 그대로 넘기면서 z를 굉장히 큰 값이랑 곱해서 원본 데이터의 분포를 유지하면서도 Noise로 덮일 수 있도록 한다고 하였는데, b(t)를 기존의 방식과 맞게 1 / (1-t)와 같은 수식으로 이용하는지에 대한 의문
+> **A.** pixel의 정보는 0 ~ 255라는 숫자로 기록되어 있고, 우리의 목표는 x를 그대로 넘기면서 t가 1에 가까워질수록 Noise로 이미지가 뒤덮이게끔 해야 하기에, t값이 커질 때, 300이나 500과 같은 큰 값을 집어넣음. 
 
 ---
 
