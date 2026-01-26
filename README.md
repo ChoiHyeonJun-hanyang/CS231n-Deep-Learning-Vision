@@ -105,6 +105,7 @@
 
 ### 2026sus 1월 26일
 1. GitHub에 강의 14강 정리
+2. Lecture 18: Human-Centered AI 수강 시작
 
 ---
 
