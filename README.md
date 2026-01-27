@@ -103,9 +103,12 @@
 ### 2026년 1월 25일
 1. Lecture 17: Robot Learning 수강
 
-### 2026sus 1월 26일
+### 2026년 1월 26일
 1. GitHub에 강의 14강 정리
 2. Lecture 18: Human-Centered AI 수강 시작
+
+### 2026년 1월 27일
+1. Lecture 18: Human-Centered AI 수강
 
 ---
 
