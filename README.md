@@ -28,7 +28,7 @@
 
 ### 5주차 (진행중)
 - [x] 강의 16 ~ 17강 수강
-- [ ] 강의 18강 수강
+- [x] 강의 18강 수강
 - [x] Assignment 3 종료
 - [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
 
@@ -109,6 +109,7 @@
 
 ### 2026년 1월 27일
 1. Lecture 18: Human-Centered AI 수강
+2. GitHub에 강의 15강 정리 (PointNet 이전까지)
 
 ---
 
@@ -1069,6 +1070,82 @@
 
 ### Lecture 15: 3D Vision
 
+> **Main Keywords:** Point Clouds, Polygonal Meshes, Parametric Representation, Algebraic Surfaces, Level Set Methods, Voxels, Multi-View CNN, 3D-GANs, PointNet
+
+#### 배운 점
+
+1. **Explicit Shape Representations에 대해**
+   - **Non-parametric**
+      - **Point Clouds**
+         - Shape를 표현하는 가장 간단한 방법으로, 오직 points만 이용하여 표현 -> Connectivity에 대한 정보가 존재하지 않음
+         - 각각의 점들은 (x, y, z)의 좌표값을 가지며, 더욱 사실적으로 표현하기 위해서 점에게 법선 벡터를 부여하기도 함 -> 이를 통해 Shape의 명암을 구현할 수 있음
+         - surfels: 기존에 크기와 방향이 존재하지 않던 점과 달리, 크기와 방향이 존재하는 점
+         - 주로 scanners에 의한 결과에서 사용, 간단한 표현 방식이기에 noise가 많음
+         - 장점: 어느 종류의 모양이던 쉽게 표현할 수 있음, large datasets에 사용하기 좋음
+         - 단점: sample과정에서 점의 밀도가 낮은 부분이 발생할 경우에 정확한 판단이 불가능, Point 사이에 Connectivity에 관한 정보가 존재하지 않기에 완전한 모양이 어떻게 생겼는지 정확히 모름
+      - **Polygonal Meshes**
+         - Shape를 다각형의 조합으로 표현하는 방식 (ex. 삼각형이나 사각형)
+         - A Large Triangle Mesh: 여러 개의 삼각형을 이용해서 Shape를 표현, 평균적으로 # of triangles = 2 x # of vertices
+         - Mesh Upsampling (Subdivision): 해상도를 높이기 위해, 더 많은 triangles를 사용하여 표현하는 방식
+         - Mesh Downsampling (Simplification): shape의 대략적인 형태를 유지하기 하면서 더욱 간단하게 표현하는 법 (Meshes를 적게 사용하여 해상도를 줄임)
+         - Mesh Regularization: Sample distribution을 변경하여 quality를 높이기 위한 작업 (크기가 다양한 meshes를 일정하게 만듦)
+   - **Parametric Representation**
+      - Shape를 1차원이나, 2차원의 값들을 이용한 함수로 구현하는 방식 -> 기존의 Non-parametric 방식은 곡선을 여러 개의 점이나, 면으로 표현하기에 완벽한 곡선이 아니었다면, Parametric 방식은 곡선과 직선을 완벽하게 구현할 수 있음
+      - Parametric Curves: 1차원의 값을 이용하여 2차원의 곡선을 구현
+      - Parametric Surfaces: 2차원의 값을 이용하여 2차원의 곡면을 구현
+      - Bezier Surfaces: 낮은 차원의 값을 더욱 유연한 3D 차원으로 mapping하는 Bezier function을 통해 만들어진 Bezier patches를 통해 만들어짐
+      - Subdivision Curves / Surfaces: 점 몇 개로 이루어진 다각형을 Subdivision을 여러 번 반복하여, 수식으로 곡선을 표현하지 않고도 곡선이나 곡면을 표현할 수 있음
+   - Explicit Representations에선 Point Clouds나 Polygonal Meshes는 (x, y, z)의 값을 가진 point나 mesh의 set이고, Parametric Representation에선 (x, y)에 해당하는 (x, y, z) 값을 수식에 대입해서 쉽게 구할 수 있음 (즉 Sampling이 쉬움)
+   - 하지만 이 방식을 사용한다면, 특정 (x, y, z)가 우리의 object 내부에 있는 점인지 외부에 있는 점인지를 알기가 어려움
+2. **Implicit Shape Representations에 대해**
+   - 특정 관계를 만족하는 points의 집합으로 shape를 표현 (ex. f(x, y, z) = 0, f = x^2 + y^2 + z^2 - 1)
+   - 우리의 목표는 복잡할 수 있는 f를 Neural Network를 이용해서 찾는 것
+   - 이 방식의 경우, f가 복잡해질 수 있기 때문에 Sampling이 어려울 수 있음 (여기서 Sampling은 f가 0이 되는 points의 집합 중 하나를 sample하는 것)
+   - 하지만 Explicit Representations의 단점이었던 내/외부의 판단이 쉬움 (f가 0보다 작다면 inside, f가 0보다 크다면 outside, f가 0이라면 객체 위의 점)
+   - **Algebraic Surfaces (Parametric Representation)**
+      - x^2 + y^2+ z^2 = 1과 같이 shape 표면의 점들 (x, y, z)을 수식으로 관계 표현
+      - Constructive Solid Geometry: 복잡한 Surfaces를 간단한 Surfaces의 Boolean operations을 통해서 표현하는 방식 (합집합: min(f_A, f_B), 교집합: max(f_A, f_B))
+         - Boolean 연산을 통해 복잡한 모형을 만드는 방식은 상대적으로 부자연스럽고, 연결부위가 이상하게 나오는 문제점이 존재
+      - Distance Functions: (x, y, z)의 위치에서 object와 가장 가까운 표면의 거리를 나타내는 함수, 이 값이 음수라면 object 안쪽, 양수라면 object 바깥쪽을 의미 -> 이를 통해 0인 점들을 전부 모으면 이 shape가 object의 shape가 됨
+         - Distance Functions를 사용한다면 Constructive Solid Geometry에 비해 Smooth Blending이 가능
+         - 만약 우리가 boundary가 다른 object를 Blending하려고 한다면, 기존의 방식을 사용할 경우 서로 겹치지 않는 부분에서 평균 값을 내기에 상대적으로 boundary가 명확하게 구현되지 않을 수 있지만, Distance functions을 사용할 경우, 다른 object의 distance functions을 합친 후 이 값이 0이 되는 경계가 boundary이기에 모호함의 문제가 발생하지 않음
+   - **Level Set Methods**
+      - shape와 유사한 모형을 표현하는 approximating function을 통해서 3D matrix에 이미 계산된 Distance function의 값을 넣음
+      - Discrete한 방식으로 값을 저장하기에 음수가 양수로 바뀌는 부분을 추정하여 Surface를 찾음
+   - **Voxels**
+      - Level Set Methods에선 Distance의 정보를 세부적인 값으로 저장하는 방식이었다면, Voxels는 단순히 object 내에 존재하는 grid라면 0, 아니라면 1과 같은 binary한 관점에서 shape를 구현
+      - 하지만 이 방식의 경우, 3D matrix를 사용한다면 정육면체를 이용해서 shape를 표현해야하기 때문에 Point Clouds, Polygonal Meshes에 비해 표현력이 안 좋음
+3. **AI + Geometry**
+   - From Objects to Parts: Object를 기능별로 다양한 parts로 나누어서 학습시키고, 다른 object에서 사용되었더라도 만약 기능이 같다면 같은 parts라고 생각하도록 함 (semantic Understanding)
+   - Generative models (p(S) or p(S|c)): Shape generation, geomerty data processing (Denoising, Upsampling)에서 사용 가능
+   - Discriminative models (p(c|S)): Discriminator에선 물체의 특징을 통해서 이를 분류하기에 shape descriptors를 학습할 때 사용할 수 있음, 또한 Shape classification, segmentation에서도 사용 가능
+   - **Multi-View CNN**
+      - 3D object를 View를 달리해가며 여러 개의 images로 렌더링 한 후, 이 이미지를 image classification에 사용하는 방식
+      - 각각의 image를 CNN을 통해서 특징들을 추출한 후, View pooling (max-pooling)을 통해서 하나의 features로 합치고 이를 CNN이나 FC에 넣어서 최종적인 classification을 수행
+      - 장점: classification에서 높은 정확도를 보여줌, image에 대한 CNN을 사용하기에 pretrained features를 사용할 수 있음
+      - 단점: 3D object를 다양한 각도의 2D images로 바꾸는 projection이 필요함, 3D data가 noise에 의해 엉망일 때, 다른 방식에 비해 더욱 안 좋은 성능을 보여줌
+   - **3D Conv Deep Belief Networks (CDBN)**
+      - Multi-View CNN에선 3D object를 2D image로 변환하여 pixel의 형식에서 classification을 하였다면, 이를 Voxels과 3D CNN을 사용하여 classification하는 방식
+   - **3D-GANs**
+      - shape code와 shape network를 통해 3D shape를 형성 (여기서 shape code는 latent z와 같고, shape network는 GAN에서의 Generator과 같음)
+      - 이를 2D GANs처럼 raw 3D object와 같이 Discriminator를 통해 분류하기엔 실제 정답지가 별로 없기 때문에, 이를 해결하기 위해서 다양한 viewpoint에서의 2D image를 만들고 이를 image와 비교하는 방식
+   - **Octave Tree Representations**
+      - 기존의 방식은 object가 없는 위치에서도 voxels의 크기가 일정하기 때문에, 메모리에서의 효율 O(N^3)이 좋지 않음
+      - 이를 해결하기 위해서 Object의 Surface와 가까울수록 크기를 줄이고, 멀어질수록 크기를 키우는 방식으로 메모리 효율을 좋게 함
+      - Octree Generating Networks: 단계별로 Voxels의 크기를 달리하여, 처음엔 큰 크기의 Voxel로 대략적인 형태를 파악한 후, 값이 바뀐 Voxel의 근처에서만 다시 작은 크기의 Voxel을 통해서 디테일한 형태를 파악하는 방식으로 더욱 복잡한 형태를 표현
+         - 이 방식을 활용할 경우엔 처음부터 작은 Voxel의 크기를 활용한 Octree보다 훨씬 더 빠른 연산을 통해 Shape를 만들어낼 수 있음
+   - **PointNet**
+     
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. Level Set Methods에서의 Distance function
+**Q.** Level Set Methods는 상대적으로 구하기 힘든 Distance function에 비해 더욱 빨리 간단하게 구할 수 있는 방법이라고 배웠는데, 여기서 사용하는 Distance function에 대한 의문
+> **A.**  Level Set Methods에서 사용하는 Distance function은 우리가 실제로 복잡한 과정을 통해서 구한 Distance function이 아닌, sensor가 얻은 object에 대한 정보들을 통해서 얻은 거리값을 의미
+
+---
+
+### Lecture 16: Vision and Language
+
 > **Main Keywords:** 
 
 #### 배운 점
@@ -1084,6 +1161,37 @@
 
 ---
 
+### Lecture 17: Robot Learning
 
+> **Main Keywords:** 
 
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
+
+### Lecture 18: Human-Centered AI
+
+> **Main Keywords:** 
+
+#### 배운 점
+
+1. 
+   -
+
+#### 내가 가진 의문 & 답변 (AI 활용)
+
+##### 1. 
+**Q.** 
+> **A.** 
+
+---
 
