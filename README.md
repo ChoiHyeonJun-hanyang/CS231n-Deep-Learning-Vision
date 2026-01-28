@@ -5,7 +5,7 @@
 ## 프로젝트 개요
 - **수강 기간**: 2025년 12월 24일 ~ (진행 중)
 - **목표 일정**: 6주 완성 (수강 5주 + 프로젝트 1주)
-- **현재 상태**: 5주차 진행 중
+- **현재 상태**: 6주차 진행 중
 
 ## 주차별 진행 상황 (Roadmap)
 
@@ -26,10 +26,14 @@
 - [x] 강의 14 ~ 15강 수강
 - [x] Assignment 3 - Self-Supervised Learning for Image Classification까지
 
-### 5주차 (진행중)
+### 5주차 (완료)
 - [x] 강의 16 ~ 18강 수강
 - [x] Assignment 3 종료
-- [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
+- [x] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
+
+### 6주차 (진행중)
+- [] Cassava Leaf Disease Classification에 대해 이해 후, 모델 설계 및 결과 도출
+- [] GitHub에 강의 내용과 과제 내용 정리
 
 ---
 
@@ -112,6 +116,7 @@
 
 ### 2026년 1월 28일
 1. GitHub에 강의 15강 정리
+2. Kaggle Project 선정 및 향후 계획 정리
 
 ---
 
