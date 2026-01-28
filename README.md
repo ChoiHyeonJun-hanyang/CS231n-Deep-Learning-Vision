@@ -32,8 +32,8 @@
 - [x] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
 
 ### 6주차 (진행중)
-- [] Cassava Leaf Disease Classification에 대해 이해 후, 모델 설계 및 결과 도출
-- [] GitHub에 강의 내용과 과제 내용 정리
+- [ ] Cassava Leaf Disease Classification에 대해 이해 후, 모델 설계 및 결과 도출
+- [ ] GitHub에 강의 내용과 과제 내용 정리
 
 ---
 
