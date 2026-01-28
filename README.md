@@ -27,8 +27,7 @@
 - [x] Assignment 3 - Self-Supervised Learning for Image Classification까지
 
 ### 5주차 (진행중)
-- [x] 강의 16 ~ 17강 수강
-- [x] 강의 18강 수강
+- [x] 강의 16 ~ 18강 수강
 - [x] Assignment 3 종료
 - [ ] Project 주제 선정 (Kaggle 활용 나만의 모델 구현)
 
@@ -110,6 +109,9 @@
 ### 2026년 1월 27일
 1. Lecture 18: Human-Centered AI 수강
 2. GitHub에 강의 15강 정리 (PointNet 이전까지)
+
+### 2026년 1월 28일
+1. GitHub에 강의 15강 정리
 
 ---
 
@@ -1070,7 +1072,7 @@
 
 ### Lecture 15: 3D Vision
 
-> **Main Keywords:** Point Clouds, Polygonal Meshes, Parametric Representation, Algebraic Surfaces, Level Set Methods, Voxels, Multi-View CNN, 3D-GANs, PointNet
+> **Main Keywords:** Point Clouds, Polygonal Meshes, Parametric Representation, Algebraic Surfaces, Level Set Methods, Voxels, Multi-View CNN, 3D-GANs, PointNet, Rendering, Structure
 
 #### 배운 점
 
@@ -1115,7 +1117,7 @@
    - **Voxels**
       - Level Set Methods에선 Distance의 정보를 세부적인 값으로 저장하는 방식이었다면, Voxels는 단순히 object 내에 존재하는 grid라면 0, 아니라면 1과 같은 binary한 관점에서 shape를 구현
       - 하지만 이 방식의 경우, 3D matrix를 사용한다면 정육면체를 이용해서 shape를 표현해야하기 때문에 Point Clouds, Polygonal Meshes에 비해 표현력이 안 좋음
-3. **AI + Geometry**
+3. **AI + Geometry (Explicit)**
    - From Objects to Parts: Object를 기능별로 다양한 parts로 나누어서 학습시키고, 다른 object에서 사용되었더라도 만약 기능이 같다면 같은 parts라고 생각하도록 함 (semantic Understanding)
    - Generative models (p(S) or p(S|c)): Shape generation, geomerty data processing (Denoising, Upsampling)에서 사용 가능
    - Discriminative models (p(c|S)): Discriminator에선 물체의 특징을 통해서 이를 분류하기에 shape descriptors를 학습할 때 사용할 수 있음, 또한 Shape classification, segmentation에서도 사용 가능
@@ -1135,12 +1137,64 @@
       - Octree Generating Networks: 단계별로 Voxels의 크기를 달리하여, 처음엔 큰 크기의 Voxel로 대략적인 형태를 파악한 후, 값이 바뀐 Voxel의 근처에서만 다시 작은 크기의 Voxel을 통해서 디테일한 형태를 파악하는 방식으로 더욱 복잡한 형태를 표현
          - 이 방식을 활용할 경우엔 처음부터 작은 Voxel의 크기를 활용한 Octree보다 훨씬 더 빠른 연산을 통해 Shape를 만들어낼 수 있음
    - **PointNet**
-     
+      - Point Clouds를 input으로 받아서, Object Classification과 Object Part Segmentation, Semantic Scene Parsing 등을 수행할 수 있음
+      - 여기서 input으로 사용하는 set of unordered points이고, 특정 부분이 얼마나 sampling되어있는지 모르기에 input의 순서와 개수에 상관 없는 함수를 만들어야 함 (symmetric functions)
+      - 우리의 목표는 symmetric function을 통해 universal family를 만드는 것
+      - 각각의 point의 좌표를 h라는 함수를 사용해서 바뀐 뒤, symmetric function g를 통해 point들의 정보를 모아둔 값을 만들고, 이를 약간의 변형과정을 통해 최종적인 결과를 도출
+      - Graph NNs on Point Clouds: Points를 Nodes라고 생각하고, 근처 Neighborhood -> Edges로 생각한 후, point cloud processing을 통해 Graph NNs에 넣어서 결과 도출
+      - **Distance Metrics for Point Clouds**
+         - Chamfer distance: Point들의 Nearest Neighbor을 찾고 이 거리들을 최소화 하는 방식
+         - Earth Mover's distance: 거리의 합이 가장 작은 값이 나오는 짝의 조합을 찾고, 이 거리를 최소화하는 방식
+   - **AtlasNet**
+      - Parametric Decoder, Latent shape representation을 input으로받아서 3D Points를 결과로 내는 방식
+      - 중간 변환과정에서 MLP를 함수처럼 사용 -> 이 방식을 통해 Explicit parametric 방식에서의 문제인 함수를 표현하기 어렵다는 점을 MLP로 해결
+   - 기존의 방식은 input이 크고, output이 작은 경우 함수로 표현하는 것이 매우 힘듦 -> Implicit 방식을 통해서 구현 시도
+4. **AI + Geometry (Implicit)**
+   - Deep Implicit Functions: Voxels, Point Clouds와 같은 Query를 Deep Learning 모델에 넣어서 다양한 정보 (inside or outside, distance, density 등)을 얻는 함수
+   - Collection of Implicit Functions: 하나의 큰 Object를 하나의 Neural Network를 통해 만드는 것은 모델의 크기를 너무 키워야한다는 문제점이 있고, 이를 하나의 모델로 표현하는 것이 불가능할 수도 있음 -> 이를 해결하기 위해 Object를 여러 개의 Parts로 나누고, 각각의 모델이 생성한 shape를 합치는 방식을 사용
+   - Implicit Functions for Geometry + Rendering
+      - Ray distance: 3D object를 렌더링할 때, 기본적으로 input의 크기를 균등하게 나누어 모델이 density를 확인하고, density가 높은 부분에 sample(t)를 많이 하는 방식으로 효율적으로 rendering
+      - x, y, z 외에도 viewing direction을 input으로 넣어서 RGB값과 density 값을 얻는 방식
+      - Rendering을 사실적으로 구현하기 위해서, c = Sigma i=1 to n (T_i * a_i * c_i) 즉 현재물체의 색 정보를 얻기 위해서 앞에서 있던 물체들의 빛 투과율을 전부 고려하여 빛의 비침 정도를 구함 -> 이 식은 미분 가능한 식이기에 backpropagation을 하기 좋음
+      - 우리가 학습하고자 하는 것은 빛과 밀도 값을 주는 함수이고, 3D 공간을 실제로 만들지는 않
+      - **Generative Modeling with Implicit Geometry + Rendering**
+         - Explicit에서의 방식과는 다르게, shape code와 shape network를 통해 3D density & radiance field를 만들고 특정 viewpoint에 대한 2D images를 Rederer가 만든 다음, GANs의 Discriminator가 판단하는 방식 (3D -> 2D의 과정에서 Volume Rendering (Ray Marching)이 사용)
+         - 하지만 이러한 NeRF의 방식의 경우, 객체가 없는 공간에서도 연산이 필요해 효율성이 떨어짐
+         - 3D Gaussian blobs: 부피가 있는 타원형의 풍선으로, 위치 정보 (x, y, z), 크기와 회전 정도, 색상, 투명도 등을 가지고 있음
+            - 이를 통해서 3D object를 표현할 경우, 2D image로 렌더링할 때 그 방향으로 단순히 blobs를 우리가 원하는 방향의 평면으로 떨어지게 하는 방식을 통해 간단하게 표현 가능 -> 빈 공간에는 blobs의 색을 고려하지 않기에 속도가 매우 빠름
+5. **Structure-Aware Representation**
+   - 하나의 오브젝트를 구현하는 과정에서 Object를 parts로 나누어서 개별적인 부품에 대한 이해도 물론 중요하지만, 이 구조에 대한 전반적인 이해도 중요함
+   - Element를 만들 때, 여러 parts 사이에서의 연결성과 관계를 이해하는 방식이 중요하기에 Graph나 Hierarchies를 사용하여 구조에 대한 이해를 늘릴 필요가 존재
+   - Segmented Geometry: 하나의 큰 덩어리를 만들면서 parts마다 label에 따른 색상을 부여함
+      - 장점: Construct하기 편하고, unstructured geometry에서 모델을 재사용하기 쉬움
+      - 단점: 특정 부분이 이상하게 나올 수 있음
+   - Part Sets: 이미 완벽하게 개별적으로 만들어진 Parts를 가져와서 위치만 조정하는 방식
+      - 장점: 각각의 part에 대한 integrity가 보장됨
+      - 단점: parts 사이의 관계에 대한 정보가 없기에 이상한 모양으로 배치 가능
+   - Relationship Graphs: 그래프를 통해 parts 사이의 relationship을 표현
+      - 장점: parts 사이에서의 중요한 관계를 강조할 수 있음
+      - 단점: 표현력이 좋지만, 역설적으로 표현력이 좋기에 경우의 수가 너무 많아짐 -> 연산의 효율성이 감소
+   - Hierarchies: 큰 형태로부터 작은 형태들도 나아가는 방식의 tree
+      - 장점: Tree 형식의 generative models의 경우, graph 형식의 generative models에 비해서 더욱 확실한 관계 (순서가 명확함)를 보여주기에 Generation이 쉬움
+      - 단점: 하지만 모든 structures가 tree의 형식으로 표현할 수 있지는 않음
+   - Hierarchical Graphs: tree의 치명적인 단점인 부모 밑의 자식들은 서로 남남이라는 문제를 해결하기 위해서 같은 level 끼리 Graph를 형성
+      - 장점: hierarchical structure 뿐만 아니라 lateral relationships에 대해서도 Model할 수 있음, Graph를 같은 level 내에서 간단하게 만들기에, 더 많고 범용적인 목적의 graph를 구현할 수 있음
+      - 단점: Hierarchical Graph는 굉장히 많은 정보를 가지고 있기 때문에 만들기가 힘듦
+      - 이를 활용할 경우엔, encoder와 decoder가 이 graph를 활용하여 진행 (ex. encoder의 과정 속에서 다음 hierarchies로 넘어가는 과정에서 같은 level의 parts와 정보를공유해가며 대칭 같은 정보를 맞춰가는 과정)
+   - Programs: 기존의 방식은 pixel, voxel을 예상하는 방식이었다면, 이 모양을 구현하기 위한 code를 예측하는 방법
+      - 장점: programs는 모든 것을 만들 수 있음, 이 코드의 값을 변경할 경우 쉽게 비슷한 다른 모양을 얻어낼 수 있음
+      - 단점: 데이터를 구하기가 힘듦
+      - 이를 해결하기 위해서 이 programs을 우리가 짜는 것이 아닌, LLM과 같은 일반적인 목적에서 범용성이 좋은 model을 통해 제작 
+    
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. Level Set Methods에서의 Distance function
 **Q.** Level Set Methods는 상대적으로 구하기 힘든 Distance function에 비해 더욱 빨리 간단하게 구할 수 있는 방법이라고 배웠는데, 여기서 사용하는 Distance function에 대한 의문
 > **A.**  Level Set Methods에서 사용하는 Distance function은 우리가 실제로 복잡한 과정을 통해서 구한 Distance function이 아닌, sensor가 얻은 object에 대한 정보들을 통해서 얻은 거리값을 의미
+
+##### 2. Deep Learning Neural Network와 Implicit Function의 연결성
+**Q.** 교수님께서 Deep NN이 Implicit Function과의 비슷함을 가지고 있다고 하였는데, Deep NN을 Image classification에서 사용한다고 가정하였을 때, input으로 이미지를 넣고, output으로 결과를 알려주는 방식이고 이는 Explicit과 비슷한 것이지 않나에 대한 의문 
+> **A.** 신경망의 작동방식은 Explicit과 비슷하지만, 3D 딥러닝에서는 신경망을 사용하는 목적이 물체의 표면을 f(x) = 0인 지점으로 정의하기 위함이기에 Implicit Function과 비슷함 (우리는 Deep NN을 통해 공간 전체에 대한 판별 함수의 역할을 하는 것을 원하기에 Implicit)
 
 ---
 
