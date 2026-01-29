@@ -118,6 +118,10 @@
 1. GitHub에 강의 15강 정리
 2. Kaggle Project 선정 및 향후 계획 정리
 
+### 2026년 1월 29일
+1. Kaggle Project - Cassava Leaf Disease Classification ViT BaseLine 참고하여 코드 작성 및 학습
+2. GitHub에 강의 16강 정리 (LLaVA 이전까지)
+
 ---
 
 ### Lecture 1: Introduction
@@ -1205,18 +1209,61 @@
 
 ### Lecture 16: Vision and Language
 
-> **Main Keywords:** 
+> **Main Keywords:** Foundation Models, CLIP, CoCa
 
 #### 배운 점
 
-1. 
-   -
-
+1. **Foundation Models에 대해**
+   - 기존의 Models는 다른 Data를 통해 다른 Task를 해야하는 경우, 새로운 Models을 만들어서 학습하는 비효율성이 존재
+   - 이를 해결하기 위해서 Large Scale Diverse Dataset을 통해서 Foundation Model을 학습시킨 후 (Pre-training), 각각의 Task에 맞게 약간 수정하거나, 거의 수정하지 않는 방식으로 사용 (Fine-tuning, zero-shot, few-shot)
+   - Pre-training: 특정 작업을 위해 학습하는 것이 아닌 언어의 문법, 세상의 상식, 이미지의 구조, 논리 등을 깨닫는 과정
+   - Update step: 특정 Task를 하기 위해서 small dataset을 이용하여 특정 부분의 문제 해결에 집중하는 과정 (Fine-tuning)
+   - Foundation Models의 특징: 다양한 tasks에 대해서 general, robust / params of model이 매우 많음 / 많은 양의 data가 필요 / pre-training에선 주로 Self-supervised를 사용
+2. **Classification Foundation Models에 대해**
+   - Self-supervised learning은 positive pair 사이의 값을 높이고, negative pair 과의 값을 낮추려고 노력함
+   - 이를 통해 만들어낸 Model은 Class label 끼리 뭉쳐있는 형태로 분류하고, 이를 통해 새로운 instance를 만들기를 원함
+   - 하지만 기존의 방식인 SimCLR과 같은 경우, Image와 Image 사이에서의 연관성만 확인 가능 -> 만약 Image와 Text 사이에서의 연관성을 알고 싶다면 새로운 Model을 만들어야 함
+   - **CLIP**
+      - SimCLR과 구고적으로 유사하지만, SimCLR는 Image와 Image를 Image Encoder에 넣어서 각각의 pair에 대해서 비교하는 방식이라면, CLIP은 Image와 Text를 Image Encoder과 Text Encoder에 넣은 후, Image의 data와 Text의 data를 비교하는 방식
+      - SimCLR와 구조적으로 비슷하기에, 같은 Contrastive objective를 통해서 학습 -> i번째 이미지가 다른 텍스트와 비교할 때, i번째 텍스트와의 연관성 정도 + i번째 텍스트가 다른 이미지와 비교할 때, i번째 이미지와의 연관성 정도
+      - Image와 그에 관한 설명(Text)가 있는 data는 인터넷에 매우 많기에 많은 양의 학습 데이터가 필요한 Self-supervised model인 CLIP은 학습 데이터 수급이 쉬움
+      - 우리의 목표는 마찬가지로 학습된 Encoder만을 가져와서 Linear classifiers를 추가한 후, Image Classification, Object Detection, Semantic Segmentation (이 경우엔 Decoder 필요)와 같은 Downstream tasks를 하는 것
+      - 하지만 이를 단순히 Image Encoder만 가져와서 Image의 특징을 추출한 후, 단순한 Linear Layer로 classification을 한다면, CLIP의 장점인 Image와 Text 사이에서의 연관성 파악을 활용하지 못함
+      - **Using Text Encoder**
+         - 이 장점을 극대화하기 위해, Image를 Image Encoder를 통해서 특징을 추출한 후, Class label을 Text로 변환하여 Text Encoder를 통해 변환 후, Pre-trained에서 해왔던 matching을 통해 similarity scores를 얻고 1-NN algorithm을 하는 방식으로 가장 가능성 높은 Class로 classification할 수 있음
+         - 하지만 이 Model이 Pre-trained 과정에서 사용하는 Data는 인터넷에서 존재하는 사진에 대한 설명들이기에, 객체 그 자체를 Text에 넣기보다는 사진에 대한 설명을 Text로 넣는 것이 더 효율적
+         - 만약 우리가 Text에 "A Photo of ~"를 넣었으나, 우리가 판단할 Image가 객체에 대한 그림일 경우 정확도가 낮아질 수 있기에, "A photo of ~", "A drawing of ~"와 같은 여러 개의 phrases를 넣는 방식으로 편항될 수 있는 phrase 문제를 방지할 수 있음
+         - 이 경우엔 각 image에 대해 여러 개의 Text phrases와 비교해야 하고, 이를 하나의 label로 결정해야 하기에 값을 평균 내서 가장 큰 값으로 결정 (1-NN algorithm)
+      - 이를 ImageNet을 통해서 학습한 ResNet101과 비교하였을 때, ImageNet에서는 이와 비슷한 성능을 보이고, ObjectNet과 같이 모델을 속이기 위해서 만들어진 dataset에서 ResNet101과 CLIP을 비교한 경우, ResNet은 익숙치 않은 dataset에서는 상대적으로 안 좋은 성능을 보여주지만, CLIP은 ImageNet에서와 비슷한 성능을 보여줌
+         - Generalization이 가능했던 이유: CLIP의 경우 Parameters의 개수가 ResNet의 것에 비해 7배의 크기로 크고, 이 모델을 학습할 dataset의 양 또한 1.28M인 ImageNet에 비해, 400M으로 매우 많은 양의 data를 통해 학습
+      - **CoCa**
+         - CLIP의 방식과 유사하지만, CLIP은 단순히 이미지와 가장 잘 맞는 Text를 찾는 방식으로 학습했기에 세부적인 디테일을 무시하고 특정 부분에만 집중하여 결과를 도출하였을 때, 만약 결과가 좋다면 세부적인 부분에서는 학습이 제대로 진행되지 않는 문제가 발생했었음
+         - 이 문제를 해결하기 위해서, CoCa에서는 Image와 가장 잘 맞는 Text를 선정할 뿐만 아니라, Image Encoder에서 나온 정보를 토대로 Multimodal Text Decoder를 통해서 이미지를 Text로 변환하였을 때의 모습을 예측하고 이 값을 원본 Text와 비교하면서 세부적인 디테일까지 학습하는 방식을 채택 (Dual Decoder 사용)
+         - 이젠 Contrastive Loss 뿐만 아니라, Captioning Loss도 고려해서 학습해야 하기에, 원본 Text를 뽑을 만큼 좋은 특징을 추출하도록 유도
+         - 이 모델을 기점으로, Self-supervised model의 성능이 다른 모든 Supervised model의 성능을 뛰어넘음
+      - **CLIP-style models의 장점**
+         - Image와 Text의 정보들을 Cosine similarity를 구하기에 연산이 쉽고 간단한 Dot product를 통해 해결 가능
+         - text로 학습했기에 text로 표현 가능한 모든 것을 표현할 수 있음 (zero-shot generalization)
+      - **CLIP-style models의 단점**
+         - SimCLR는 단순히 Positive pair인지 아닌지만 구별하면 되지만, CLIP은 세부적인 정보 (동물의 다양한 종, 다양한 식물)를 고려해야 하기에 더욱 많은 batch size가 필요함
+            - Fine-grained model을 얻기 위해서는 굉장히 비효율적인 batch size가 필요함 (ex.32000)
+            - 이렇게 큰 batch size가 필요한 이유는 batch size가 클수록 model 입장에서 판단하기 어려운 예시들이 있을 가능성이 높고, 이를 분류해내는 과정에서 디테일한 정보까지 고려해야 하기에 좋은 학습이 이루어지기 때문임
+            - 이 문제를 batch size를 줄이면서 극복하기 위해서 우리가 직접 batch에 Hard Negative Fine-Tuning을 하는 방법을 고려 -> 하지만 오히려 이 방식이 더욱 모델의 성능을 낮춘다는 결과가 도출
+         - Image를 Captioning 하는 과정에서 공간적인 정보와 같은 디테일한 정보가 사라질 수 있음, 이는 본질적으로 디테일한 정보까지 고려하는 것을 추구하는 CLIP의 방식과 충돌
+         - 인터넷에 있는 데이터를 통해 학습하기에 어떤 정보들이 training data로 쓰이는 지에 대한 정확한 이해가 어려움 -> data collection과 filtering을 의도적으로 하는 것이 매우 중요
+   
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Discriminative & Generative Models
+**Q.** ChatGPT와 같은 LLM 들은 생성형 모델인 것으로 알고 있고, Transformer blocks를 사용하는 것으로 알고 있는데, Discriminative models에서도 Transformer block을 사용할 수 있는 것을 본다면, 생성형 모델인지 판별형 모델인지는 Loss function과 조합하는 방식이 결정하는 지에 대한 의문 
+> **A.** Feature Extractor인 CNN, RNN, Transformer의 경우엔 단순히 데이터의 특징을 뽑아낼 때 사용되는 모델, 우리가 만드는 모델이 어떤 값을 반환하는 것이 목표인지에 따라 갈림, Loss function으로는 이를 판단하기에 어려움이 존재
+> - Discriminative Models: Model이 Forward pass를 통해서 도출한 결과가 주어진 data x에 대해서 y일 확률 (p(y|x))이고, 이를 원본 label이랑 비교하는 경우
+> - Generative Models: Model이 Forward pass를 통해서 도출한 결과가 data x의 pdf (p(x) or p(x|y))를 아는 것이고, 이를 원본 데이터들과 비교하는 경우
+> - 단순히 Loss function으로 비교하기엔, Logistic Regression과 Autoregressive Model 둘다 loss function으로 MLE를 사용하지만, 전자는 판별형 모델이고 후자는 생성형 모델임
+
+##### 2. CLIP에서의 Multiple phrases 구현
+**Q.** CLIP에서 편항을 줄이기 위해서, Text Encoder에 class label과 관련된 여러 개의 phrases를 넣는다고 할 때, CLIP은 인터넷의 데이터를 통해 학습하기에 객체의 특징에 대한 정보도 고려하지만, 세부적인 설명에 존재하는 배경과 같은 정보들에 대한 이해도 중요하다고 하던데, 만약 우리가 Text encoder에 넣는 값이 고정이라면 어떻게 이 배경이나 세부적인 디테일에 관한 내용들을 담는 것이 불가능하기에 Encoder에 넣기 전 Embedding을 통해 그런 값들을 학습하도록 하는 방법에 대한 의문
+> **A.** CLIP은 객체들의 정보를 고려하면서 많은 양의 데이터를 Self-supervised learning을 통해 학습했기에, 세부적인 디테일한 정보를 고려할 경우 더 좋은 성능을 기대할 수 있고, 실제로 [v1] [v2] [v3] ... [class]와 같은 방식으로 선언해놓은 후, v1 ~ vn 까지를 Embedding layer (learnable layer)를 통해 학습해가며 상황에 맞는 단어들로 채워가는 방식의 CoOp를 통해서 더 좋은 성능을 유도하는 시도가 존재
 
 ---
 
