@@ -124,6 +124,7 @@
 
 ### 2026년 1월 30일
 1. Kaggle Project - Data Augmentation 및 Random Search를 활용하여 Overfitting 문제 해결 시도
+2. GitHub에 강의 16강 정리
 
 ---
 
@@ -1212,7 +1213,7 @@
 
 ### Lecture 16: Vision and Language
 
-> **Main Keywords:** Foundation Models, CLIP, CoCa
+> **Main Keywords:** Foundation Models, CLIP, CoCa, LLaVA, Flamingo, Open Models, Molmo, SAM, Chaining
 
 #### 배운 점
 
@@ -1254,7 +1255,57 @@
             - 이 문제를 batch size를 줄이면서 극복하기 위해서 우리가 직접 batch에 Hard Negative Fine-Tuning을 하는 방법을 고려 -> 하지만 오히려 이 방식이 더욱 모델의 성능을 낮춘다는 결과가 도출
          - Image를 Captioning 하는 과정에서 공간적인 정보와 같은 디테일한 정보가 사라질 수 있음, 이는 본질적으로 디테일한 정보까지 고려하는 것을 추구하는 CLIP의 방식과 충돌
          - 인터넷에 있는 데이터를 통해 학습하기에 어떤 정보들이 training data로 쓰이는 지에 대한 정확한 이해가 어려움 -> data collection과 filtering을 의도적으로 하는 것이 매우 중요
-   
+3. **LM + Vision Foundation Models에 대해**
+   - 다음에 올 Token을 예상하는 Language Models는 Diverse General Tasks에 적용할 수 있기에, 이를 활용한 모델을 Vision-Language Models이라고 함  
+   - **LLaVA**
+      - LLaVA가 등장하기 이전에, ViLBERT가 존재하였지만, 이 모델의 경우엔 다른 task를 수행하기 위해서 각각 finetune 과정을 거쳐야 했기에 Foundation Model이라고 생각하기엔 무리가 있음
+      - 기본 Idea: Image와 Text를 비교하여 다음 Text token을 예측하는 아이디어 -> 세부적으로는 CLIP Encoder를 통해서 Image를 Input image tokens로 바꾼 후, 이 뒤에 우리가 예측하기 전의 Text를 Transformer block에 넣어서 다음 Token을 예측하는 방식
+      - 여기서 사용하는 Transformer는 LLM과 같이 Text를 해석해서 다음 text token을 예측하는 문제에 유능한 Model을 사용
+      - **CLIP Encoder의 문제점**
+         - CLIP Encoder는 Image를 여러 개의 patches로 나누고, 이를 앞에 CLS Token을 넣어서 하나의 값으로 바꾸는 방식으로 진행하기에 만약 우리가 이대로 Encoder를 가져온다면, 각각의 patch에 대한 정보를 억지로 합친 정보만 사용할 수 있게됨
+         - 또한 CLS Token의 output을 제외한 나머지의 output은 학습과 backpropagation에서 고려하지 않고 진행되기에, 상대적으로 쓸모 없는 값이 존재할 수 있음, 또한 공간적 정보에 대한 손실이 발생할 수 있
+      - 다음과 같은 문제점을 해결하기 위해서, CLIP Encoder에서 다른 patches의 정보를 CLS Token으로 넘겨주는 Final layer를 제외한 그 전 penultimate layer까지의 Encoder를 사용하여 Image를 Patch의 Token으로 변경
+      - 여기서의 값들은 LLM이 이해하기에 적합한 값이 아닐 수 있기에, LLM이 제대로 Image patch의 정보를 이해할 수 있도록, Encoder의 output에서 학습 가능한 Linear Layer를 사용 -> LLM이 Image patch에 대한 정보를 알아낼 수 있음
+   - **Flamingo**
+      - 기본 Idea: LLaVA와 같이, Image를 보고 주어진 Text를 통해서 다음 text token을 예측하는 것이 목표이지만 LLaVA와는 달리, Image를 Encoder를 통해 추출한 결과를 Transformer block에서 Cross-Attention을 하는 곳에서 사용
+      - Vision Encoder를 통해서 바뀐 Image의 값들을 Perceiver Resampler를 통해서 고정된 크기의 벡터로 변경하고 이를 GATED XATTN-DENSE에 넣음
+         - 여기서 Perceiver Resampler는 가변적인 개수의 이미지 토큰을 고정된 개수(예: 64개)의 핵심 요약 토큰으로 압축하여 LLM 연산 부담을 줄여주는 역할
+      - 여기서 Text input을 단순히 text만 넣는 것이 아닌, One-shot의 예시에서 <image> token을 이미지의 설명 text 앞에 배치하여 Transformer block에서 어디에서 Image를 확인해야 하는지를 알려줌
+      - Vision Encoder와 LM block은 이미 CLIP이나 LLM에서 학습된 Block이기에 frozen 상태로 두고, Perceiver Resampler, GATED XATTN-DENSE만 학습하는 방식
+      - **GATED Cross-Attention**
+         - Image에서 Encoder와 Resampler를 통해서 얻어낸 결과를 Key와 Value에 넣고, Query에 text input을 넣음
+         - 이후 Cross-Attention을 통해 나온 결과를 tanh gating을 통해서 학습 정보를 수정하면서 image를 확인하고 residual connection을 통해 text input과 정보를 합침
+      - <image>와 <EOC>같은 Special tags를 사용하여, 학습 데이터를 laguage model 처럼 제작
+      - Masked Attention: Processed text를 tokenization을 통해서 Cross-Attention 과정에서 특정 이미지와 관련된 text의 정보만을 참고하게끔 함 -> 예를 들어 <image> 부터 다음 <image> 토큰이 나올 때까지 mask하는 방식
+      - 이를 통해서 LLaVA의 목적과 같이 다음에 나올 Texts를 예측하는 것이 목적임
+      - Flamingo는 few-shot learning처럼 예시를 준 후, 이 예시와 같이 예측하는 것이 가능
+4. **Open Models에 대해서**
+   - LLaVA와 같은 Model은 Open Source Model -> 상대적으로 다른 Vision + Language Model에 비해 정확도가 떨어짐
+   - API Only: GPT나 Gemini 같은 Model의 경우는 User들이 사용할 수 있는 API만 공개함 -> 정보를 외부에게 노출 X
+   - Open Weights Model: Qwen과 같은 모델로 GPT에게 distilled, 상대적으로 좋은 성능을 보여주지만, 결국 모델의 구조나 데이터를 공개하지 않는 GPT를 통해 학습하였기에 문제가 존재
+   - Completely Open Model: Open Weights, Open Data, Open Code, Open Evals
+      - LLaVA와 같은 Open Source 모델의 성능이 좋지 않고, 성능이 좋은 경우엔 구조나 디테일을 공개하지 않은 경우가 대부분이기에, 공익의 목적에서 공개한 성능이 매우 우수한 모델
+      - **Molmo**
+         - 기존에 LLM을 활용한 Vision + Language Model은 단순히 Image를 통해서 다음에 있을만한 Text를 예측하는 방식이었다면, Molmo는 이미지를 통해서 Text를 예측하고, 만약 Image에서 Object을 classification하는 문제라면 그 Object를 이미지 내에서 찾아 pixel의 좌표로 반환
+         - 기존의 VLM이 단순히 caption 위주로 하기에, text와 image 사이의 공간적인 연결성이 떨어졌으나, Molmo에서는 학습 데이터로 points를 추가하였기에 내재적인 Pointing 능력이 존재
+         - Molmo의 학습 방식과 같은 경우는 기존의 모델인 LLAMA가 60억 개의 data로 학습한 것에 반해, 고작 70만개의 데이터로 학습하였음
+         - 기존에 Foundation Model이 학습에 사용하는 Data의 경우엔, 인터넷에서 올라온 데이터가 주이고, 이 데이터들의 Text 정보는 incidental함 -> 즉 객체에 집중한 설명이 아닌, 주변에 있는 디테일한 부분에 대한 설명이 주가 되는 경우가 존재
+         - Molmo에서는 사람들로 하여금 사진을 보고 특정 시간동안 최대한 사진에 대해서 자세히 설명하게 유도하여, Image를 설명하는 Text가 기존의 internet data에 비해 굉장히 자세하게 만들었고 이는 적은 데이터로도 굉장히 좋은 모델을 만들 수 있는 계기가 되었음 (Human annotated data: Intentional)
+         - 구조: Images를 CLIP의 Encoder에 넣어서 patch에 따른 token을 생성한 후, 이 개수를 줄이기 위해 4개의 token을 하나의 token으로 만드는 방식의 Connector를 사용하고, 이 뒤에 우리가 원하는 text를 tokenizer의 과정을 통해서 LLM에 넣어서 Text의 예측과 Pointer의 예측을 하게끔 함
+         - 우리는 이 모델을 통해서 output으로 이미지에서 우리가 원하는 객체나 위치에 대한 point를 얻을 수 있고, 이를 SAM2와 같은 다른 Model에게 넣어서 추가적인 활용도 가능
+5. **Segmentation Models에 대해**
+   - **SAM**
+      - 구조: Image를 Image Encoder(MAE, 주로 pre-trained ViT) 에 넣은 후, 나온 imgae embedding을 우리가 기존에 해놓았던 mask를 통해 참고할 수 있고, 이 값을 prompt encoder를 통해서 변형된 text, box, points에 대한 정보들을 종합하여 mask decoder (Segmentation Decoder)를 통해서 물체의 masking을 하는 구조
+      - 만약 우리가 원하는 물체의 points가 애매한 경우엔, 어디 범위까지 masking을 해야할지 모르는 문제가 발생 -> 이를 해결하기 위해, 여러 개의 경우를 고려하여 실제 ground-truth와 제일 유사한 masking을 선택하여 loss 값을 구함
+      - 이러한 Segmentation Foundation model은 매우 많은 양의 dataset이 필요하고, 유저가 원하는 부분을 분류할 수 있어야 함
+      - 그 문제를 해결하기 위해서, 적정량의 data로 SAM을 학습시키고, 이를 통해서 segmentation된 data를 다시 train에 넣는 방식으로 부족한 양의 데이터를 보완 (이 과정에서 인간의 도움이 약간은 필요)
+6. **Chaining에 대해**
+   - model로 하여금 처음 보는 단어를 통해 classification을 하라고 할 경우엔, 정답률이 낮아질 수 있고 이는 모델의 generalization에 문제가 될 수 있음
+   - 이를 해결하기 위해, LLM에게 해당 단어에 대한 설명을 하게끔 하고, 이 설명 (상대적으로 model이 접할 가능성이 높은 단어들)을 토대로 clasify할 경우 기존에 비해 정답률이 좋아짐
+   - 이 방식을 사용한 모델이 CuPL -> LLM에게 class label에 대해서 설명을 요구하고 이렇게 얻어낸 설명을 Model에 집어넣어 classification하는 방식
+   - VisProg: Chaining을 통해 새로운 Tasks를 해결하려고 할때, LLM은 프로그래밍 코드를 짜는 것을 잘하기에 상황을 설명해주고, Chaining을 하는 과정을 LLM이 code로 짜게 하는 방식
+      - 이 방식을 사용할 경우, 우리는 Prompt에 few-shot 처럼 코드에 대한 예시를 주고, 이러한 방식대로 LLM이 우리가 원하는 Tasks를 해결할 Chaining 과정을 code로 짜게 할 수 있음
+
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. Discriminative & Generative Models
@@ -1267,6 +1318,12 @@
 ##### 2. CLIP에서의 Multiple phrases 구현
 **Q.** CLIP에서 편항을 줄이기 위해서, Text Encoder에 class label과 관련된 여러 개의 phrases를 넣는다고 할 때, CLIP은 인터넷의 데이터를 통해 학습하기에 객체의 특징에 대한 정보도 고려하지만, 세부적인 설명에 존재하는 배경과 같은 정보들에 대한 이해도 중요하다고 하던데, 만약 우리가 Text encoder에 넣는 값이 고정이라면 어떻게 이 배경이나 세부적인 디테일에 관한 내용들을 담는 것이 불가능하기에 Encoder에 넣기 전 Embedding을 통해 그런 값들을 학습하도록 하는 방법에 대한 의문
 > **A.** CLIP은 객체들의 정보를 고려하면서 많은 양의 데이터를 Self-supervised learning을 통해 학습했기에, 세부적인 디테일한 정보를 고려할 경우 더 좋은 성능을 기대할 수 있고, 실제로 [v1] [v2] [v3] ... [class]와 같은 방식으로 선언해놓은 후, v1 ~ vn 까지를 Embedding layer (learnable layer)를 통해 학습해가며 상황에 맞는 단어들로 채워가는 방식의 CoOp를 통해서 더 좋은 성능을 유도하는 시도가 존재
+
+##### 3. Qwen과 같은 Open Weights model의 정확도
+**Q.** GPT나 Gemini 같은 높은 정확도를 보여주는 AI model은 API만 공개하였기에, 어떻게 모델 구조를 만들었는지와 같은 정보를 알려주지 않았는데 어떻게 distillation을 하였고 그렇게 좋은 성능을 보여줄 수 있을지에 대한 의문
+> **A.**
+> - Distillation: 개발자가 API에게 이미지와 질문을 주고, 얻은 답변을 기존의 이미지와 질문에 합쳐서 고품질의 데이터를 만들고 이를 Qwen이나 LLaVA와 같은 model에게 supervised-learning을 시킴
+> - Performance: GPT 또한 AI 모델이기에 잘못된 정답을 도출할 때가 존재하는 데, 이를 개발자가 걸러내고 고품질의 데이터만 선별하여 distillation 시키고, GPT의 경우엔 다양한 Tasks를 처리하기 위해서 다양한 데이터를 통해서 학습하기 때문에, Vision tasks라는 특정 분야에선 그 분야를 위해 학습한 Qwen-VL과 같은 모델의 성능이 더욱 좋을 수 있음  
 
 ---
 
