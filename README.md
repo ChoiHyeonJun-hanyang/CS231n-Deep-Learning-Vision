@@ -122,6 +122,9 @@
 1. Kaggle Project - Cassava Leaf Disease Classification ViT BaseLine 참고하여 코드 작성 및 학습
 2. GitHub에 강의 16강 정리 (LLaVA 이전까지)
 
+### 2026년 1월 30일
+1. Kaggle Project - Data Augmentation 및 Random Search를 활용하여 Overfitting 문제 해결 시도
+
 ---
 
 ### Lecture 1: Introduction
