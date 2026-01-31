@@ -126,6 +126,10 @@
 1. Kaggle Project - Data Augmentation 및 Random Search를 활용하여 Overfitting 문제 해결 시도
 2. GitHub에 강의 16강 정리
 
+### 2026년 1월 31일
+1. Kaggle Project - ResNet50을 이용하여, 정확도 테스트 및 Pretrained 가중치 없이 학습 시도
+2. GitHub에 강의 17강 정리
+
 ---
 
 ### Lecture 1: Introduction
@@ -1329,18 +1333,75 @@
 
 ### Lecture 17: Robot Learning
 
-> **Main Keywords:** 
+> **Main Keywords:** Robot Learning, Reinforcement learning,
 
 #### 배운 점
 
-1. 
-   -
+1. **Robot Learning에 대해**
+   - Agent (Robot)이 현실 환경에서 Action을 할 때, 이로 인한 Reward를 참고하며 어떤 Action이 Reward를 제일 높이는 지를 배우는 과정
+   - **Problem formulation**
+      - 인공지능에서 무언가를 설계할 때는, 우리가 어떤 문제를 해결할 것인지를 정하는 것이 중요
+      - Robot Learning에선, 인간이 Robot (Agent)에게 g라는 목표를 전달하면, 현실세계에서부터 현재 상태와 reward를 받고 Action을 한 뒤 다시 현재 상태와 reward를 받으며 reward를 maximize하는 방식
+      - Ex1. Cart-Pole Problem
+         - Goal: 카트에 있는 봉을 직각으로 세우고, 이를 유지하는 것이 목표
+         - State: 현재 봉의 각도와 위치, 변하는 정도, 카트의 속도 등
+         - Action: 카트에 가하는 수평적인 힘 (봉의 각도를 조절할 수 있음)
+         - Reward: 봉이 직각으로 존재한다면 1, 아니면 0
+      - Ex2. Robot Locomotion
+         - Goal: Robot이 앞으로 가는 것이 목표
+         - State: 각 joint의 각도, 위치, 속도 등
+         - Action: joints에 걸리는 Torques -> 이 힘을 통해서 관절이 이동이 결정되고 관절의 이동은 Robot의 이동을 이끌어 냄
+         - Reward: Robot이 제대로 서서, 앞으로 이동할 경우 1, 아니면 0
+      - Ex3. Atari Games
+         - Goal: 게임을 가장 높은 점수로 끝내는 것
+         - State: 게임 화면의 Raw pixel inputs
+         - Action: 이 게임에서 필요한 움직임 (ex. Left, Right)
+         - Reward: timestep 이후 점수의 변동폭
+      - Ex4. AlphaGo
+         - Goal: 바둑 게임을 승리하는 것
+         - State: 모든 돌들의 위치
+         - Action: 다음 돌을 어디에 위치시킬 것인지
+         - Reward: 마지막 턴에 이긴다면 1, 진다면 0
+      - Ex5. Text Generation
+         - Goal: 다음 단어를 맞추는 것
+         - State: 지금까지 문장 내에 존재하는 단어들
+         - Action: 다음 단어 생성
+         - Reward: 맞았다면 1, 아니면 0
+      - Ex6. Chatbot
+         - Goal: 좋은 동료가 되어주는 것
+         - State: 진행 중이던 대화
+         - Action: 질문에 대한 대답
+         - Reward: 소비자가 만족했다면 1, 보통이라면 0, 만족하지 못했다면 -1
+      - 예시와 같이, Problem을 해결하기 위한 목표, 상태, 보상, 행동 등을 제대로 정의할 필요가 있음
+   - **Robot Perception**
+      - Real World에선 단순히 현재 상태 외에도 다양한 변수가 존재
+         - 로봇의 센서 (ex. Vision)으로 보는 Real World는 완전하지 않음
+         - 가상세계와 달리 물리세계의 경우, 바닥이 미끄러운 것과 같은 변수로 인해 실패 가능성이 존재
+         - 상황이 Robot 본인의 행동에 의해서만 변하는 것이 아닌, 다른 Agent의 개입으로 변할 수 있음
+      -  로봇의 센서로 현실상황을 제대로 인지하기 위해서 Multi-modal senser를 사용하여 얻어낸 정보들을 통해 상호작용할 필요가 있음
+      -  **Robot Vision vs Computer Vision**
+         - Robot vision은 embodied, active, 환경적으로 situated
+            - Embodied: Robot의 행동이 자신의 센서 데이터 값을 변경함, 즉 Robot은 물리 세계 내에서 존재하며, Robot의 행동이 현실에 영향을 줌 -> 이는 가상 세계 내에서 진행되고, 실제 세계에 영향을 주지 않는 Computer Vision과 다른 점
+            - Active: Computer Vision은 입력값을 약간은 변경하는 Augmentation이 가능하지만, 정보가 부족하다면 부족한 정보만을 이용하여 학습을 진행해야 함, 하지만 Robot vision은 알지 못하는 데이터가 궁금한 경우, 직접적인 이동이나 시점 변경을 통해 해결할 수 있음 -> 이는 더 좋은 센서 데이터를 얻기 위해 스스로의 행동을 결정한다는 점에서 Computer Vision과 다름
+            - Situated: 기존의 모델의 경우, 고정된 상황에서 학습, Robot Vision은 즉각적인 상황의 변화가 로봇의 action에 영향을 줌 -> 시시각각 변하는 실시간 환경 속에서 작동
+      - Perception-Action Loop: 로봇의 행동은 현실을 변화시키기에, Perceive -> Act -> Perceive -> Act -> ... 와 같은 반복이 필요함 -> 이는 Robot Learning이 기존의 학습에 비해 난이도가 높은 이유
+2. **Reinforcement learning에 대해**
+   - RL은 Agents를 환경과의 상호작용을 통해 학습하고 reward를 최대화하는 방식 (trial and error)
+   - **Reinforcement Learning vs Supervised Learning**
+      - Stochasticity: RL은 Supervised Learning과 같이 Agent가 Environment에게 state 정보를 받고, 이 정보를 토대로 행동을 하여 그 행동에 대한 reward를 받는 방식이지만, Supervised Learning에서는 timestep에 관계 없이 환경으로 부터 주어진 정보가 같다면 같은값을 반환하는 것에 반해, RL은 상태가 같더라도 현재의 상황이 이전까지의 Action에 의해 변하기에 다른 Action을 해야 함
+      - Credit assignment: Supervised Learning은 우리가 segmentation이나 classification과 같은 tasks를 한다고 하였을 때 바로 맞았는지 아닌지에 대한 정보를 얻을 수 있는 반면에, AlphaGo에서의 예시처럼 Reinforcement Learning의 경우는 현재 timestep에서의 Reward가 현재 timestep에서의 action에 의하지 않을 수 있음
+      - Nondifferentiable: Supervised Learning의 경우는 Backpropagation을 통해서 모든 parameters에 대한 gradient를 구할 수 있지만, Reinforcement Learning의 경우는 여러 변수가 존재하기에, backpropagation을 통해서 gradient를 구할 수 없음
+      - Nonstationary: 이전에 Model이 정한 Action이 Supervised Model의 경우엔 영향을 주지 않지만, Reinforcement Learning에서는 이전에 정한 Action이 이후에 어떻게 행동할 지에 영향을 줌
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
-##### 1. 
-**Q.** 
-> **A.** 
+##### 1. Generative Model과 Supervised & Self-Supervised Model의 연관성
+**Q.** Generative Model을 본다면, 주로 Self-Supervised Model의 개념을 사용하는 것 같은데, 이 이유가 Generative Model에서는 p(x)를 구하는 것이 목적, 즉 data 자체의 분포를 아는 것이 목적이고 Self-Supervised Encoder의 특징 추출 능력이 더 좋아서 그런건지에 대한 의문, 그렇다면 Conditional Generative Model에서는 Supervised Model을 사용하는 것인지에 대한 의문 
+> **A.**
+> - 학습의 대부분을 Self-Supervised learning의 방식을 사용하여 데이터의 분포를 완벽히 익히게 한 후, Conditional Generative Model에서는 Condition에 대한 Guidance 역할로만 약간 사용
+> - 또한 Self-Supervised Learning은 많은 양의 데이터를 통해서 더 좋은 능력을 학습할 수 있고, Generative Model의 목표는 Classification이 아니라 주어진 데이터에 대한 분포를 이해하는 것이기에 Self-Supervised Model을 사용  
+
+
 
 ---
 
