@@ -128,7 +128,7 @@
 
 ### 2026년 1월 31일
 1. Kaggle Project - ResNet50을 이용하여, 정확도 테스트 및 Pretrained 가중치 없이 학습 시도
-2. GitHub에 강의 17강 정리
+2. GitHub에 강의 17강 정리 (Model Learning 이전까지)
 
 ---
 
@@ -1392,6 +1392,14 @@
       - Credit assignment: Supervised Learning은 우리가 segmentation이나 classification과 같은 tasks를 한다고 하였을 때 바로 맞았는지 아닌지에 대한 정보를 얻을 수 있는 반면에, AlphaGo에서의 예시처럼 Reinforcement Learning의 경우는 현재 timestep에서의 Reward가 현재 timestep에서의 action에 의하지 않을 수 있음
       - Nondifferentiable: Supervised Learning의 경우는 Backpropagation을 통해서 모든 parameters에 대한 gradient를 구할 수 있지만, Reinforcement Learning의 경우는 여러 변수가 존재하기에, backpropagation을 통해서 gradient를 구할 수 없음
       - Nonstationary: 이전에 Model이 정한 Action이 Supervised Model의 경우엔 영향을 주지 않지만, Reinforcement Learning에서는 이전에 정한 Action이 이후에 어떻게 행동할 지에 영향을 줌
+      - Atari Games에서는 현재의 결과가 바로 reward의 형식으로 전해지지 않기에, 이를 해결하기 위해서 이전 states의 정보를 같이 넘겨줘서 특정 행동을 하였을 때, 그 행동의 결과를 예상하는 FC-A (Q-values)를 사용하는 방식
+         - 하지만 이 방식의 문제점은 우리가 특정 행동을 했을 때 이후의 보상을 예상해야 하기에, 만약 우리가 할 수 있는 행동이 자유로울 경우, FC-A layer가 너무 커질 수도 있음
+   - **Problems of Model-Free RL**
+      - 너무나 변수가 많은 환경에서 원하는 tasks를 수행해야 하기에, 많은 횟수의 학습이 필요하고 시뮬레이션에서 학습했다고 하더라도 현실세계와 gap이 큰 경우가 많음
+      - 만약 현실세계에서 학습을 할 경우엔, 실패하였을 때의 안전성 문제가 존재
+      - 또한 학습 과정에서 robot이 잘못된 방향으로 학습할 때, 이를 해결할 수 있는 방법을 찾는 것이 어려움
+      - Robot이 도움을 줘야하는 인간의 경우는 현실 세계에 대한 직관을 가지고 있어 RL에 비해 적은 양의 데이터로도 학습을 효율적으로 진행할 수 있고, 배운 지식을 다른 곳에 적용하는 것이 쉬움
+      - 하지만 Robot의 경우는 하나를 학습하기 위해서 굉장히 많은 데이터가 필요하고, 학습한다고 하더라도 비슷한 상황이지만 약간 다른 경우 적용하지 못할 가능성이 큼 
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
