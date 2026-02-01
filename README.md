@@ -130,6 +130,73 @@
 1. Kaggle Project - ResNet50을 이용하여, 정확도 테스트 및 Pretrained 가중치 없이 학습 시도
 2. GitHub에 강의 17강 정리 (Model Learning 이전까지)
 
+### 2026년 2월 1일
+1. Kaggle Project - ResNet50 (Pretrained and NotPretrained)와 ViT (Pretrained)가 어떻게 classification했는지 Grad-CAM 구현 후, 확인
+### 2026년 1월 16일
+1. Assignment3 - Image Captioning with Transformers 종료
+2. Lecture 13: Generative Models 1 수강
+
+### 2026년 1월 17일
+1. GitHub에 강의 9강 정리
+
+### 2026년 1월 18일
+1. GitHub에 강의 10강 정리
+2. Lecture 14: Generative Models 2 수강 시작 (GANs와 Diffusion Models: Intuition까지 진행)
+
+### 2026년 1월 19일
+1. Lecture 14: Generative Models 2 수강
+2. Assignment3 - Self-Supervised Learning for Image Classification 시작
+
+### 2026년 1월 20일
+1. Assignment3 - Self-Supervised Learning for Image Classification 종료
+2. GitHub에 강의 11강 정리
+3. Lecture 15: 3D Vision 수강 시작 (Constructive Solid Geometry까지 진행)
+
+### 2026년 1월 21일
+1. Lecture 15: 3D Vision 수강
+2. GitHub에 강의 12강 정리
+
+### 2026년 1월 22일
+1. Assignment3 - Denoising Diffusion Probabilistic Models
+2. GitHub에 강의 13강 정리
+
+### 2026년 1월 23일
+1. Lecture 16: Vision and Language 수강 시작 (Flamingo까지 진행)
+
+### 2026년 1월 24일
+1. Lecture 16: Vision and Language 수강
+2. Assignment3 - CLIP and Dino
+
+### 2026년 1월 25일
+1. Lecture 17: Robot Learning 수강
+
+### 2026년 1월 26일
+1. GitHub에 강의 14강 정리
+2. Lecture 18: Human-Centered AI 수강 시작
+
+### 2026년 1월 27일
+1. Lecture 18: Human-Centered AI 수강
+2. GitHub에 강의 15강 정리 (PointNet 이전까지)
+
+### 2026년 1월 28일
+1. GitHub에 강의 15강 정리
+2. Kaggle Project 선정 및 향후 계획 정리
+
+### 2026년 1월 29일
+1. Kaggle Project - Cassava Leaf Disease Classification ViT BaseLine 참고하여 코드 작성 및 학습
+2. GitHub에 강의 16강 정리 (LLaVA 이전까지)
+
+### 2026년 1월 30일
+1. Kaggle Project - Data Augmentation 및 Random Search를 활용하여 Overfitting 문제 해결 시도
+2. GitHub에 강의 16강 정리
+
+### 2026년 1월 31일
+1. Kaggle Project - ResNet50을 이용하여, 정확도 테스트 및 Pretrained 가중치 없이 학습 시도
+2. GitHub에 강의 17강 정리 (Model Learning 이전까지)
+
+### 2026년 2월 1일
+1. Kaggle Project - ResNet50 (Pretrained and NotPretrained)와 ViT (Pretrained)가 어떻게 classification했는지 Grad-CAM 구현 후, 확인
+
 ---
 
 ### Lecture 1: Introduction
