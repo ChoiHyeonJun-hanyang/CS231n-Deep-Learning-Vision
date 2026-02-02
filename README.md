@@ -197,6 +197,9 @@
 ### 2026년 2월 1일
 1. Kaggle Project - ResNet50 (Pretrained and NotPretrained)와 ViT (Pretrained)가 어떻게 classification했는지 Grad-CAM 구현 후, 확인
 
+### 2026년 2월 2일
+1. Kaggle Project - Ensemble의 방식을 사용하여 정확도를 증가
+
 ---
 
 ### Lecture 1: Introduction
