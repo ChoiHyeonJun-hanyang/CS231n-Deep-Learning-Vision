@@ -136,6 +136,9 @@
 ### 2026년 2월 2일
 1. Kaggle Project - Ensemble을 이용한 정확도 증가 계산 및 ViT 재학습 -> 최종 점수 확인
 
+### 2026년 2월 3일
+1. GitHub에 강의 17강 정리
+
 ---
 
 ### Lecture 1: Introduction
@@ -1339,7 +1342,7 @@
 
 ### Lecture 17: Robot Learning
 
-> **Main Keywords:** Robot Learning, Reinforcement learning,
+> **Main Keywords:** Robot Learning, Reinforcement Learning, Model Learning, Model-Based Planning, Imitation Learning, Robotic Foundation Models, Foundation World Models
 
 #### 배운 점
 
@@ -1391,7 +1394,7 @@
             - Active: Computer Vision은 입력값을 약간은 변경하는 Augmentation이 가능하지만, 정보가 부족하다면 부족한 정보만을 이용하여 학습을 진행해야 함, 하지만 Robot vision은 알지 못하는 데이터가 궁금한 경우, 직접적인 이동이나 시점 변경을 통해 해결할 수 있음 -> 이는 더 좋은 센서 데이터를 얻기 위해 스스로의 행동을 결정한다는 점에서 Computer Vision과 다름
             - Situated: 기존의 모델의 경우, 고정된 상황에서 학습, Robot Vision은 즉각적인 상황의 변화가 로봇의 action에 영향을 줌 -> 시시각각 변하는 실시간 환경 속에서 작동
       - Perception-Action Loop: 로봇의 행동은 현실을 변화시키기에, Perceive -> Act -> Perceive -> Act -> ... 와 같은 반복이 필요함 -> 이는 Robot Learning이 기존의 학습에 비해 난이도가 높은 이유
-2. **Reinforcement learning에 대해**
+2. **Reinforcement Learning에 대해**
    - RL은 Agents를 환경과의 상호작용을 통해 학습하고 reward를 최대화하는 방식 (trial and error)
    - **Reinforcement Learning vs Supervised Learning**
       - Stochasticity: RL은 Supervised Learning과 같이 Agent가 Environment에게 state 정보를 받고, 이 정보를 토대로 행동을 하여 그 행동에 대한 reward를 받는 방식이지만, Supervised Learning에서는 timestep에 관계 없이 환경으로 부터 주어진 정보가 같다면 같은값을 반환하는 것에 반해, RL은 상태가 같더라도 현재의 상황이 이전까지의 Action에 의해 변하기에 다른 Action을 해야 함
@@ -1405,7 +1408,64 @@
       - 만약 현실세계에서 학습을 할 경우엔, 실패하였을 때의 안전성 문제가 존재
       - 또한 학습 과정에서 robot이 잘못된 방향으로 학습할 때, 이를 해결할 수 있는 방법을 찾는 것이 어려움
       - Robot이 도움을 줘야하는 인간의 경우는 현실 세계에 대한 직관을 가지고 있어 RL에 비해 적은 양의 데이터로도 학습을 효율적으로 진행할 수 있고, 배운 지식을 다른 곳에 적용하는 것이 쉬움
-      - 하지만 Robot의 경우는 하나를 학습하기 위해서 굉장히 많은 데이터가 필요하고, 학습한다고 하더라도 비슷한 상황이지만 약간 다른 경우 적용하지 못할 가능성이 큼 
+      - 하지만 Robot의 경우는 하나를 학습하기 위해서 굉장히 많은 데이터가 필요하고, 학습한다고 하더라도 비슷한 상황이지만 약간 다른 경우 적용하지 못할 가능성이 큼
+   - Reinforcement Learning은 보상을 극대화하려는 과정에서 high-level이 발생
+3. **Model Learning & Model-Based Planning에 대해**
+   - Reinforcement Learning에서의 문제점은 결국 Sim-to-real의 차이를 줄이는 것이 목표이기에 Model Learning을 사용
+   - **Model Learning**
+      - 우리가 구하고자 하는 값은 현재 상태 s_t와 우리가 취할 행동인 a_t를 고려하였을 때, s_{t+1}가 어떻게 변하는지에 대한 값 -> p(s_{t+1} | s_t, a_t)
+      - Planning: 미래에 어떤 action을 해야 할지를 미래의 상태를 예측해가며 계획
+      - 계획한 첫번째 행동을 수행하고, 변화된 새로운 상태를 확인하고 우리가 계획해놓은 action sequence를 gradient를 사용하여 최적화 진행 (Execute -> Obtain -> Optimize)
+      - s_t를 어떤 방식으로 정의하느냐에 따라 성능의 차이가 심함
+      - **Pixel Dynamics - Deep Visual Foresight**
+         - 하나의 Image I_t를 받아서 다음 timestep에서의 Image I_{t+1}의 예측을 하는 것이 목표
+         - Image I_t를 conv에 넣어서 Input의 크기를 원하는 크기로 조정한 후, 다음 이미지를 예측하는 것이 목표기에 Conv LSTM을 사용하고, 이후 action a_t와 state s_t를 고려하며 진행
+      - Keypoint Dynamics: Object를 몇 개의 Keypoints로 나눠서 물체를 옮기는 작업과 같은 예시에서 그 points를 옮기는 작업을 수행하는 방식으로 활용
+      - **Particle Dynamics**
+         - 유체나 반죽 혹은 Keypoint를 이용해서 표현하기 어려운 물체를 여러 개의 입자의 구성으로 인식하여 tasks를 수행
+         - Future Prediction: Initial State와 Model-Based Planning을 통해 계획한 Action을 넣어서 다음 timestep의 State를 예측하는 방식
+         - 만두피를 만드는 예시: 어떤 Tool을 사용할지를 현재 상태를 보고 정해야 하고, 사용할 Tool을 고른 경우 그 Tool에 맞는 규칙을 통해서 action을 진행
+   - Model Learning은 high-level의 과정에서 Supervised learning을 진행
+4. **Imitation Learning에 대해**
+   - Model Learning에서는 high-level에서의 선택을 Supervised를 통해 결정하고 자세한 low-level detail은 기존에 정해진대로만 수행할 수 있었다면 Imitation Learning은 low-level detail까지 Supervised를 통해 결정하는 방식
+   - Behavior Cloning: 전문가가 정답이라고 판단한 action을 로봇의 예측값이 따라가도록 학습하는 방식
+   - **Iterative Collection of Expert Demonstrations**
+      - 전문가가 시연한 정답을 토대로, Supervised Learning을 통해서 Model이 전문가가 시연한 행동과 최대한 비슷하게 하도록 학습
+      - 이후 model이 전문가의 행동을 통해 학습하며 배운 policy를 실제 환경해서 실행 -> 이 결과 (ex. 궤적)을 다시 전문가에게 보내서 feedback을 받고 이 과정을 다시 반복하는 방식으로 학습
+      - 이 방식은 반복할 때마다 전문가가 정답을 시연하고 이를 Training data로 넘겨주기에, data의 개수가 계속해서 바뀜
+   - **Inverse Reinforcement Learning (IRL)**
+      - Reinforcement Learning은 현재 상태와 보상값을 통해서 다음 행동을 하였을 때, 보상을 최대화하는 방식으로 진행
+      - Inverse Reinforcement Learning은 주어진 상황에서 어떤 행동을 하였을 때, 받는 보상을 예측하는 방식
+      - 이렇게 예측한 보상함수의 의도를 통해서 Policy를 수정하는 방식으로 학습
+   - **Implicit Behavior Cloning (IBC)**
+      - IRL은 현재의 행동을 통해서 얻어질 이득을 계산하는 방식으로 진행되기에, 점수표를 얻은 후, RL을 다시 돌려서 점수를 극대화하는 법을 찾아야 하기에 비효율적
+      - IBC는 Behavior Cloning과 비슷하지만, Regression을 통해서 actions를 예측하는 것이 아닌 EBM을 사용해서 불연속적인 행동도 표현할 수 있음
+   - **Diffusion Policies**
+      - IBC나 Explicit BC의 경우는 전문가의 답변을 모방하는 과정에서 전문가들이 제공해준 답변과 전부 비교해가며 답을 찾아내기에 상대적으로 비효율적
+      - Diffusion Policies는 Diffusion Model의 작동 방식처럼 전문가들의 부드러운 관절 움직임을 단순히 학습된 모델에게 랜덤한 Noise를 주고 점진적으로 Noise를 지워가는 과정에서 도출할 수 있음
+5. **Robotic Foundation Models에 대해**
+   - 기존의 방식은 우리가 어떻게 state를 정의해주는 지에 따라서 모델의 성능이 달라짐 -> Foundation Model에서는 우리가 따로 Explicit Representation을 정의해주지 않고, Model이 학습과정에서 Implicit하게 function을 찾는 방식으로 진행
+   - 이 모델은 우리가 본 것과, 목표를 넣으면 어떤 행동을 해야 할지를 알려주는 모델
+   - Current Foundational Vision-and-Language Models: output이 완벽하지는 않지만, 항상 합리적인 결과를 생성
+   - 이를 활용한 Robotic Foundation Models는 나온 action이 항상 최적의 행동일 수는 없지만, generated trajectory는 항상 합리적인 결과를 낼 것
+   - **Pi-Zero by Physical Intelligence**
+      - Cross-embodiment dataset: 세상에 존재하는 모든 로봇들의 센서와 행동 데이터를 모아둔 통합 데이터셋
+      - **Pre-training**
+         - Cross-embodiment dataset을 통해서 하나의 큰 VLA 모델을 생성 -> LLM이 많은 양의 데이터를 통해서 언어의 문법을 안 것처럼 VLA가 많은 양의 데이터를 통해서 세상의 물리적 상을 배움
+         - 이 과정을 Pre-training 과정이라고 하고, 이 과정에서 이미 학습된 VLM을 사용하여 우리가 로봇한테 목표를 성취하기 위해서 해야 할 행동을 언어 token으로 변경
+         - 이렇게 학습된 VLA 모델을 이용해서 Zero shot in-distribution tasks를 진행하여 모델이 우리가 원하는 바를 제대로 학습했는지를 알아봄
+      - **Post-training**
+         - Pre-training을 통해서 똑똑해진 VLA 모델을 특정 로봇의 움직임이나 특정 작업에 맞게 fine-tuning을 하는 과정
+         - 이렇게 학습된 모델을 학습 데이터 내에서 존재하고 복잡한 tasks를 통해서 문제 없이 우리가 원하는 방식으로 해내는 지를 확인하는 Complicated in-distribution tasks를 실행
+         - 또한 학습 데이터 내에서 존재하지 않는 unseen tasks에 대해서도 VLA 모델이 가진 기본적은 물리적 상식만으로 해결할 수 있는지를 test
+6. **남아있는 문제점**
+   - 현실 세계는 가상 세계에 비해 돈도 많이 들고, 변수가 많이 존재, 또한 가상 세계에서의 성공이 현실 세계에서의 무조건적인 성공을 이끌어내지 못함
+   - 가상 세계를 현실 세계처럼 만드는 방식에도 여러 문제점이 존재
+   - **Foundation World Models & Foundation Policy**
+      - 지금까지 우리의 방식은 전문가의 행동을 모방하여 학습하는 방식으로 학습해왔음
+      - Foundation World Models는 세상의 물리 법칙을 완전히 시뮬레이션하는 모델
+      - 우리는 Data가 들어왔을 때 어떤 행동을 할 지를 고민하고 이를 Foundation World Models에게 넘겨서 시뮬레이션하는 방식으로 사람처럼 미래를 상상하며 행동하는 모델을 만드는 것이 목적
+   - 현재 우리가 VLM에서 사용하는 LLM의 경우, 대부분의 데이터가 정적인 데이터를 통해 학습해왔고 Robot의 Action 데이터와 같이 embodied 환경에 존재하는 데이터가 적기 때문에 embodied-related tasks에 실패할 수 있음 
 
 #### 내가 가진 의문 & 답변 (AI 활용)
 
@@ -1415,7 +1475,11 @@
 > - 학습의 대부분을 Self-Supervised learning의 방식을 사용하여 데이터의 분포를 완벽히 익히게 한 후, Conditional Generative Model에서는 Condition에 대한 Guidance 역할로만 약간 사용
 > - 또한 Self-Supervised Learning은 많은 양의 데이터를 통해서 더 좋은 능력을 학습할 수 있고, Generative Model의 목표는 Classification이 아니라 주어진 데이터에 대한 분포를 이해하는 것이기에 Self-Supervised Model을 사용  
 
-
+##### 2. Model Learning과 Reinforcement Learning의 차이점
+**Q.** Reinforcement Learning의 예시에서는 인간이 High-dimensional command를 주는 방식으로 시연하였다고 하는데, Model-Learning에서는 알아서 한다는 방식에서의 차이점이 어떻게 존재할 수 있는지에 대한 의문
+> **A.**
+> - Reinforcement Learning은 현재 상태를 기준으로 어떤 행동을 취해야 하는지를 알려주는 모델 -> 현실 세계에서의 reward를 높이는 방식에서만 이해하고 어떻게 현실 세계가 작동하는지를 이해하지 못함
+> - Model Learning의 경우 Model-Based Planning에 따른 계획된 결과를 단순히 이전 상태와 같이 GNN에 넣어서 다음 상태를 예측하는 방식으로 사용되기에 GNN Model은 현실 세계가 어떻게 작동하는지를 이해해야 함
 
 ---
 
@@ -1431,6 +1495,10 @@
 #### 내가 가진 의문 & 답변 (AI 활용)
 
 ##### 1. 
+**Q.** 
+> **A.** 
+
+##### 2. 
 **Q.** 
 > **A.** 
 
